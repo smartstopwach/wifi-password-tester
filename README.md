@@ -1,6 +1,6 @@
 # WiFi Password Tester
 
-Ye ek chhota sa tool hai jo aapke **3–4 passwords me se sahi WiFi password** khud
+Ye ek chhota sa tool hai jo aapke **passwords me se sahi WiFi password** khud
 try karke bata deta hai — koi guessing nahi, khud test karta hai.
 
 > ⚠️ **Sirf apne khud ke WiFi par use karein** (jiske passwords aapke paas pehle se
@@ -9,7 +9,40 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 
 ---
 
-## 🪟 WINDOWS — sabse aasaan tarika (Python ki zaroorat NAHI)
+# 📱 SABSE AASAAN TARIKA — "APP" (ek hi file)
+
+**Sirf `WifiTesterApp.bat` download karo — bas yehi ek file chahiye.**
+
+- Koi folder nahi, koi dusri file nahi, koi Python/PowerShell samajhne ki zaroorat nahi.
+- Is par **double-click** karo → ek **window khulegi** (jaise normal app).
+
+### Window me ye sab milega:
+| Chiz | Kya kare |
+|------|----------|
+| **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
+| **Passwords box** | Har line me ek password likho, **ya txt file ko seedha us box me drag-drop** karo, ya "txt file kholo" button se chuno |
+| **START button** | Dabao → ye khud test karega |
+| **Progress + log** | Kaunsa password try ho raha hai, live dikhta hai |
+| **Result** | Sahi password **bade green letters** me dikhega |
+
+### Steps:
+1. `WifiTesterApp.bat` download karo (koi bhi folder — bas 1 file).
+2. Double-click karo.
+3. **Scan Networks** dabao → apna WiFi chuno (ya naam likho).
+4. Passwords likho / txt file drag-drop karo.
+5. **START** dabao → result aa jayega. ✅
+
+> Pehli baar Windows SmartScreen bole to **More info → Run anyway**. Ye isliye
+> hota hai kyunki file internet se download hui hai; script me sirf `netsh`
+> (Windows ka apna WiFi command) use hota hai, kuch bhi install nahi hota.
+
+> 🛠️ Ye "app" asal me ek .bat file hai jo apne andar chhupa hua code (PowerShell
+> GUI) nikaal kar chalati hai. Source code `wifi_tester_gui.ps1` me hai agar
+> koi dekhna chahe.
+
+---
+
+## 🪟 WINDOWS — command line wala tarika (bat/ps1, bina Python)
 
 Ye do files download karo aur **dono ek hi folder me** rakho:
 
