@@ -13,3 +13,4 @@ Thumbs.db
 # temp
 *.xml
 *.tmp
+uploads/
