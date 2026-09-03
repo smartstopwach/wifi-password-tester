@@ -20,6 +20,7 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 | Chiz | Kya kare |
 |------|----------|
 | **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
+| **"Abhi connected" (green)** | SSID box ke neeche **live** dikhta hai ki abhi kaunsa WiFi connected hai — isse sure ho jaoge ki sahi WiFi ka hi test ho raha hai |
 | **Passwords box** | Har line me ek password likho, **ya txt file ko seedha us box me drag-drop** karo, ya "txt file kholo" button se chuno |
 | **START button** | Dabao → ye khud test karega |
 | **Progress + log** | Kaunsa password try ho raha hai, live dikhta hai |

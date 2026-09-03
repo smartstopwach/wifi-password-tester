@@ -30,6 +30,17 @@ function Get-CurrentSsid {
     return $null
 }
 
+function Update-CurrentLabel {
+    $cur = Get-CurrentSsid
+    if ($cur) {
+        $script:lblCurrent.Text = "Abhi connected: " + $cur
+        $script:lblCurrent.ForeColor = [System.Drawing.Color]::Green
+    } else {
+        $script:lblCurrent.Text = "Abhi connected: koi nahi (WiFi off hai?)"
+        $script:lblCurrent.ForeColor = [System.Drawing.Color]::Red
+    }
+}
+
 function Escape-Xml([string]$s) {
     return [System.Security.SecurityElement]::Escape($s)
 }
@@ -170,7 +181,7 @@ $lblSub.Size = New-Object System.Drawing.Size(590, 20)
 
 # --- SSID row ---
 $lblSsid = New-Object System.Windows.Forms.Label
-$lblSsid.Text = "WiFi ka naam (SSID):"
+$lblSsid.Text = "WiFi ka naam (SSID) - jisko connect karna hai:"
 $lblSsid.Location = New-Object System.Drawing.Point(15, 74)
 $lblSsid.Size = New-Object System.Drawing.Size(590, 18)
 
@@ -185,9 +196,9 @@ $btnScan.Location = New-Object System.Drawing.Point(495, 96)
 $btnScan.Size = New-Object System.Drawing.Size(110, 28)
 
 $lblCurrent = New-Object System.Windows.Forms.Label
-$lblCurrent.ForeColor = [System.Drawing.Color]::Gray
+$lblCurrent.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $lblCurrent.Location = New-Object System.Drawing.Point(15, 128)
-$lblCurrent.Size = New-Object System.Drawing.Size(590, 18)
+$lblCurrent.Size = New-Object System.Drawing.Size(590, 24)
 
 # --- Passwords ---
 $lblPass = New-Object System.Windows.Forms.Label
@@ -267,6 +278,7 @@ $btnScan.Add_Click({
     $cnt = Scan-Networks
     if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile") }
     else { Add-Log "Scan: koi network nahi mila - SSID khud likho" }
+    Update-CurrentLabel
 })
 
 $btnFile.Add_Click({
@@ -328,9 +340,10 @@ $btnStart.Add_Click({
         $script:prgBar.Value = $i
         Add-Log ("[" + $i + "/" + $pws.Count + "] Try: " + $pw)
         $ok = Test-Password $ssid $pw $auth $wait
+        Update-CurrentLabel
         if ($ok) {
             $found = $pw
-            Add-Log ("SAHI password: " + $pw)
+            Add-Log ("SAHI password: " + $pw + "  ->  abhi connected: " + $ssid)
             break
         } else {
             Add-Log ("X galat: " + $pw)
@@ -353,8 +366,7 @@ $btnStart.Add_Click({
 # Startup: auto-scan + show current connection
 # ---------------------------------------------------------------------------
 
-$cur = Get-CurrentSsid
-if ($cur) { $lblCurrent.Text = "Abhi connected: " + $cur } else { $lblCurrent.Text = "Abhi connected: koi nahi" }
+Update-CurrentLabel
 
 $cnt = Scan-Networks
 if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile - dropdown se chuno") }
