@@ -1,5 +1,5 @@
 # ============================================================================
-#  WiFi Password Tester - GUI version (Windows)
+#  WiFi Password Tester - GUI (Windows) - Modern Aesthetic Edition
 #  Ek window me sab kuch: SSID scan, passwords, START button, result.
 #
 #  NOTE: Is file ko seedha chalane ke liye "WifiTesterApp.bat" use karo
@@ -15,6 +15,31 @@ Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = "SilentlyContinue"
 
 $script:authMap = @{}
+
+# ---------------------------------------------------------------------------
+# Colors (theme)
+# ---------------------------------------------------------------------------
+$C_BG        = [System.Drawing.Color]::FromArgb(238, 242, 249)   # window background
+$C_CARD      = [System.Drawing.Color]::White
+$C_HEADER    = [System.Drawing.Color]::FromArgb(29, 78, 216)     # deep blue
+$C_HEADER_TX = [System.Drawing.Color]::White
+$C_HEADER_SUB= [System.Drawing.Color]::FromArgb(191, 219, 254)
+$C_ACCENT    = [System.Drawing.Color]::FromArgb(29, 78, 216)
+$C_GRAY      = [System.Drawing.Color]::FromArgb(100, 116, 139)
+$C_PRIMARY   = [System.Drawing.Color]::FromArgb(37, 99, 235)     # blue button
+$C_SECONDARY = [System.Drawing.Color]::FromArgb(226, 232, 240)
+$C_SECOND_TX = [System.Drawing.Color]::FromArgb(30, 41, 59)
+$C_GREEN     = [System.Drawing.Color]::FromArgb(22, 163, 74)
+$C_RED       = [System.Drawing.Color]::FromArgb(220, 38, 38)
+$C_IDLE      = [System.Drawing.Color]::FromArgb(203, 213, 225)
+$C_IDLE_TX   = [System.Drawing.Color]::FromArgb(51, 65, 85)
+$C_LOG_BG    = [System.Drawing.Color]::FromArgb(248, 250, 252)
+
+$F_TITLE = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
+$F_STEP  = New-Object System.Drawing.Font("Segoe UI", 9,  [System.Drawing.FontStyle]::Bold)
+$F_BTN   = New-Object System.Drawing.Font("Segoe UI", 12.5, [System.Drawing.FontStyle]::Bold)
+$F_BIG   = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+$F_CUR   = New-Object System.Drawing.Font("Segoe UI", 10.5, [System.Drawing.FontStyle]::Bold)
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -35,11 +60,11 @@ function Get-CurrentSsid {
 function Update-CurrentLabel {
     $cur = Get-CurrentSsid
     if ($cur) {
-        $script:lblCurrent.Text = "Abhi connected: " + $cur
-        $script:lblCurrent.ForeColor = [System.Drawing.Color]::Green
+        $script:lblCurrent.Text = "O  Abhi connected: " + $cur
+        $script:lblCurrent.ForeColor = $C_GREEN
     } else {
-        $script:lblCurrent.Text = "Abhi connected: koi nahi (WiFi off hai?)"
-        $script:lblCurrent.ForeColor = [System.Drawing.Color]::Red
+        $script:lblCurrent.Text = "X  Abhi connected: koi nahi (WiFi off hai?)"
+        $script:lblCurrent.ForeColor = $C_RED
     }
 }
 
@@ -145,29 +170,28 @@ function Scan-Networks {
 }
 
 function Update-SecInfo {
-    # SSID ke hisaab se security type dikhao + WPA3 checkbox auto-set karo
     $name = $script:cmbSsid.Text.Trim()
     if ($name -and $script:authMap.ContainsKey($name)) {
         $auth = $script:authMap[$name]
         if ($auth -match 'WPA3') {
-            $script:lblSec.Text = "Security: " + $auth + "  ->  NAYA type (WPA3), checkbox ON ho gaya"
-            $script:lblSec.ForeColor = [System.Drawing.Color]::Green
+            $script:lblSec.Text = "Security: " + $auth + "   ->   NAYA type (WPA3). Checkbox apne aap ON ho gaya."
+            $script:lblSec.ForeColor = $C_GREEN
             $script:chkWpa3.Checked = $true
         } elseif ($auth -match 'WPA2') {
-            $script:lblSec.Text = "Security: " + $auth + "  ->  purana type, aise hi chalega"
-            $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+            $script:lblSec.Text = "Security: " + $auth + "   ->   purana type. Aise hi chalega."
+            $script:lblSec.ForeColor = $C_GRAY
             $script:chkWpa3.Checked = $false
         } elseif ($auth -match 'WPA') {
-            $script:lblSec.Text = "Security: " + $auth + "  ->  bahut purana type"
-            $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+            $script:lblSec.Text = "Security: " + $auth + "   ->   bahut purana type."
+            $script:lblSec.ForeColor = $C_GRAY
             $script:chkWpa3.Checked = $false
         } else {
-            $script:lblSec.Text = "Security: " + $auth + "  ->  OPEN (password nahi lagta)"
-            $script:lblSec.ForeColor = [System.Drawing.Color]::Red
+            $script:lblSec.Text = "Security: " + $auth + "   ->   OPEN (password nahi lagta)."
+            $script:lblSec.ForeColor = $C_RED
         }
     } else {
-        $script:lblSec.Text = "Security: pata nahi (default WPA2 chalega - purana router ho to aise hi chhodo)"
-        $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+        $script:lblSec.Text = "Security: pata nahi. Default WPA2 chalega (purana router ho to aise hi chhodo)."
+        $script:lblSec.ForeColor = $C_GRAY
     }
 }
 
@@ -197,119 +221,216 @@ $frmMain.Text = "WiFi Password Tester"
 $frmMain.StartPosition = "CenterScreen"
 $frmMain.FormBorderStyle = "FixedSingle"
 $frmMain.MaximizeBox = $false
-$frmMain.ClientSize = New-Object System.Drawing.Size(620, 640)
-$frmMain.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$frmMain.ClientSize = New-Object System.Drawing.Size(640, 700)
+$frmMain.BackColor = $C_BG
+$frmMain.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
-# --- Title ---
-$lblTitle = New-Object System.Windows.Forms.Label
-$lblTitle.Text = "WiFi Password Tester"
-$lblTitle.Font = New-Object System.Drawing.Font("Segoe UI", 14, [System.Drawing.FontStyle]::Bold)
-$lblTitle.ForeColor = [System.Drawing.Color]::FromArgb(30, 90, 180)
-$lblTitle.Location = New-Object System.Drawing.Point(15, 12)
-$lblTitle.Size = New-Object System.Drawing.Size(590, 32)
+# --- Header banner ---
+$pnlHeader = New-Object System.Windows.Forms.Panel
+$pnlHeader.Location = New-Object System.Drawing.Point(0, 0)
+$pnlHeader.Size = New-Object System.Drawing.Size(640, 92)
+$pnlHeader.BackColor = $C_HEADER
 
-$lblSub = New-Object System.Windows.Forms.Label
-$lblSub.Text = "Apne passwords me se sahi WiFi password dhundho - ek click me"
-$lblSub.ForeColor = [System.Drawing.Color]::Gray
-$lblSub.Location = New-Object System.Drawing.Point(15, 46)
-$lblSub.Size = New-Object System.Drawing.Size(590, 20)
+$lblBrand = New-Object System.Windows.Forms.Label
+$lblBrand.Text = "WiFi Password Tester"
+$lblBrand.Font = $F_TITLE
+$lblBrand.ForeColor = $C_HEADER_TX
+$lblBrand.Location = New-Object System.Drawing.Point(24, 14)
+$lblBrand.Size = New-Object System.Drawing.Size(500, 32)
 
-# --- SSID row ---
+$lblBrandSub = New-Object System.Windows.Forms.Label
+$lblBrandSub.Text = "Apne passwords me se sahi WiFi password dhundho - ek click me"
+$lblBrandSub.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$lblBrandSub.ForeColor = $C_HEADER_SUB
+$lblBrandSub.Location = New-Object System.Drawing.Point(24, 50)
+$lblBrandSub.Size = New-Object System.Drawing.Size(580, 28)
+
+$pnlHeader.Controls.Add($lblBrand)
+$pnlHeader.Controls.Add($lblBrandSub)
+
+# --- Card 1: WiFi chuno ---
+$pnlWifi = New-Object System.Windows.Forms.Panel
+$pnlWifi.Location = New-Object System.Drawing.Point(16, 100)
+$pnlWifi.Size = New-Object System.Drawing.Size(608, 128)
+$pnlWifi.BackColor = $C_CARD
+
+$lblStep1 = New-Object System.Windows.Forms.Label
+$lblStep1.Text = "STEP 1  |  WIFI CHUNO"
+$lblStep1.Font = $F_STEP
+$lblStep1.ForeColor = $C_ACCENT
+$lblStep1.Location = New-Object System.Drawing.Point(14, 10)
+$lblStep1.Size = New-Object System.Drawing.Size(580, 20)
+
 $lblSsid = New-Object System.Windows.Forms.Label
 $lblSsid.Text = "WiFi ka naam (SSID) - jisko connect karna hai:"
-$lblSsid.Location = New-Object System.Drawing.Point(15, 74)
-$lblSsid.Size = New-Object System.Drawing.Size(590, 18)
+$lblSsid.ForeColor = $C_GRAY
+$lblSsid.Location = New-Object System.Drawing.Point(14, 36)
+$lblSsid.Size = New-Object System.Drawing.Size(580, 16)
 
 $cmbSsid = New-Object System.Windows.Forms.ComboBox
 $cmbSsid.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDown
-$cmbSsid.Location = New-Object System.Drawing.Point(15, 96)
-$cmbSsid.Size = New-Object System.Drawing.Size(470, 28)
+$cmbSsid.Location = New-Object System.Drawing.Point(14, 58)
+$cmbSsid.Size = New-Object System.Drawing.Size(428, 28)
 
 $btnScan = New-Object System.Windows.Forms.Button
 $btnScan.Text = "Scan Networks"
-$btnScan.Location = New-Object System.Drawing.Point(495, 96)
-$btnScan.Size = New-Object System.Drawing.Size(110, 28)
+$btnScan.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnScan.FlatAppearance.BorderSize = 0
+$btnScan.BackColor = $C_PRIMARY
+$btnScan.ForeColor = [System.Drawing.Color]::White
+$btnScan.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$btnScan.Location = New-Object System.Drawing.Point(452, 58)
+$btnScan.Size = New-Object System.Drawing.Size(142, 28)
 
 $lblCurrent = New-Object System.Windows.Forms.Label
-$lblCurrent.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
-$lblCurrent.Location = New-Object System.Drawing.Point(15, 128)
-$lblCurrent.Size = New-Object System.Drawing.Size(590, 24)
+$lblCurrent.Font = $F_CUR
+$lblCurrent.Location = New-Object System.Drawing.Point(14, 92)
+$lblCurrent.Size = New-Object System.Drawing.Size(580, 26)
 
-# --- Passwords ---
-$lblPass = New-Object System.Windows.Forms.Label
-$lblPass.Text = "Passwords (har line me ek) - ya txt file yahan drag-drop karo:"
-$lblPass.Location = New-Object System.Drawing.Point(15, 152)
-$lblPass.Size = New-Object System.Drawing.Size(590, 18)
+$pnlWifi.Controls.Add($lblStep1)
+$pnlWifi.Controls.Add($lblSsid)
+$pnlWifi.Controls.Add($cmbSsid)
+$pnlWifi.Controls.Add($btnScan)
+$pnlWifi.Controls.Add($lblCurrent)
+
+# --- Card 2: Passwords ---
+$pnlPass = New-Object System.Windows.Forms.Panel
+$pnlPass.Location = New-Object System.Drawing.Point(16, 236)
+$pnlPass.Size = New-Object System.Drawing.Size(608, 176)
+$pnlPass.BackColor = $C_CARD
+
+$lblStep2 = New-Object System.Windows.Forms.Label
+$lblStep2.Text = "STEP 2  |  PASSWORDS LIKHO  (har line me ek)"
+$lblStep2.Font = $F_STEP
+$lblStep2.ForeColor = $C_ACCENT
+$lblStep2.Location = New-Object System.Drawing.Point(14, 10)
+$lblStep2.Size = New-Object System.Drawing.Size(580, 20)
 
 $txtPass = New-Object System.Windows.Forms.TextBox
 $txtPass.Multiline = $true
 $txtPass.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
 $txtPass.AllowDrop = $true
-$txtPass.Location = New-Object System.Drawing.Point(15, 174)
-$txtPass.Size = New-Object System.Drawing.Size(590, 160)
+$txtPass.Font = New-Object System.Drawing.Font("Consolas", 10)
+$txtPass.Location = New-Object System.Drawing.Point(14, 32)
+$txtPass.Size = New-Object System.Drawing.Size(580, 106)
 
 $btnFile = New-Object System.Windows.Forms.Button
 $btnFile.Text = "txt file kholo..."
-$btnFile.Location = New-Object System.Drawing.Point(15, 340)
-$btnFile.Size = New-Object System.Drawing.Size(150, 30)
+$btnFile.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnFile.FlatAppearance.BorderSize = 0
+$btnFile.BackColor = $C_SECONDARY
+$btnFile.ForeColor = $C_SECOND_TX
+$btnFile.Location = New-Object System.Drawing.Point(14, 144)
+$btnFile.Size = New-Object System.Drawing.Size(150, 26)
 
 $btnClear = New-Object System.Windows.Forms.Button
 $btnClear.Text = "Saaf karo"
-$btnClear.Location = New-Object System.Drawing.Point(175, 340)
-$btnClear.Size = New-Object System.Drawing.Size(90, 30)
+$btnClear.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnClear.FlatAppearance.BorderSize = 0
+$btnClear.BackColor = $C_SECONDARY
+$btnClear.ForeColor = $C_SECOND_TX
+$btnClear.Location = New-Object System.Drawing.Point(172, 144)
+$btnClear.Size = New-Object System.Drawing.Size(90, 26)
 
-# --- Options ---
+$lblHint = New-Object System.Windows.Forms.Label
+$lblHint.Text = "ya txt file ko seedha upar drag-drop kar do"
+$lblHint.ForeColor = $C_GRAY
+$lblHint.Font = New-Object System.Drawing.Font("Segoe UI", 8.5)
+$lblHint.Location = New-Object System.Drawing.Point(270, 148)
+$lblHint.Size = New-Object System.Drawing.Size(320, 20)
+
+$pnlPass.Controls.Add($lblStep2)
+$pnlPass.Controls.Add($txtPass)
+$pnlPass.Controls.Add($btnFile)
+$pnlPass.Controls.Add($btnClear)
+$pnlPass.Controls.Add($lblHint)
+
+# --- Card 3: Settings ---
+$pnlOpt = New-Object System.Windows.Forms.Panel
+$pnlOpt.Location = New-Object System.Drawing.Point(16, 420)
+$pnlOpt.Size = New-Object System.Drawing.Size(608, 84)
+$pnlOpt.BackColor = $C_CARD
+
+$lblStep3 = New-Object System.Windows.Forms.Label
+$lblStep3.Text = "STEP 3  |  SETTINGS"
+$lblStep3.Font = $F_STEP
+$lblStep3.ForeColor = $C_ACCENT
+$lblStep3.Location = New-Object System.Drawing.Point(14, 10)
+$lblStep3.Size = New-Object System.Drawing.Size(580, 20)
+
 $lblWait = New-Object System.Windows.Forms.Label
 $lblWait.Text = "Wait (sec):"
-$lblWait.Location = New-Object System.Drawing.Point(15, 382)
-$lblWait.Size = New-Object System.Drawing.Size(80, 20)
+$lblWait.ForeColor = $C_GRAY
+$lblWait.Location = New-Object System.Drawing.Point(14, 38)
+$lblWait.Size = New-Object System.Drawing.Size(76, 20)
 
 $numWait = New-Object System.Windows.Forms.NumericUpDown
 $numWait.Minimum = 1
 $numWait.Maximum = 30
 $numWait.Value = 7
-$numWait.Location = New-Object System.Drawing.Point(90, 378)
-$numWait.Size = New-Object System.Drawing.Size(60, 26)
+$numWait.Location = New-Object System.Drawing.Point(92, 36)
+$numWait.Size = New-Object System.Drawing.Size(64, 24)
 
 $chkWpa3 = New-Object System.Windows.Forms.CheckBox
 $chkWpa3.Text = "WPA3 (naya router)"
-$chkWpa3.Location = New-Object System.Drawing.Point(170, 380)
-$chkWpa3.Size = New-Object System.Drawing.Size(180, 24)
+$chkWpa3.Location = New-Object System.Drawing.Point(168, 38)
+$chkWpa3.Size = New-Object System.Drawing.Size(170, 24)
 
 $lblSec = New-Object System.Windows.Forms.Label
-$lblSec.Text = "Security: pata nahi (default WPA2 chalega)"
-$lblSec.ForeColor = [System.Drawing.Color]::Gray
-$lblSec.Location = New-Object System.Drawing.Point(15, 406)
-$lblSec.Size = New-Object System.Drawing.Size(590, 20)
+$lblSec.Text = "Security: pata nahi. Default WPA2 chalega."
+$lblSec.ForeColor = $C_GRAY
+$lblSec.Location = New-Object System.Drawing.Point(14, 60)
+$lblSec.Size = New-Object System.Drawing.Size(580, 20)
 
-# --- START ---
+$pnlOpt.Controls.Add($lblStep3)
+$pnlOpt.Controls.Add($lblWait)
+$pnlOpt.Controls.Add($numWait)
+$pnlOpt.Controls.Add($chkWpa3)
+$pnlOpt.Controls.Add($lblSec)
+
+# --- START button ---
 $btnStart = New-Object System.Windows.Forms.Button
-$btnStart.Text = "START - Sahi Password Dhundho"
-$btnStart.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+$btnStart.Text = "START  -  SAHI PASSWORD DHUNDHO"
+$btnStart.Font = $F_BTN
 $btnStart.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$btnStart.BackColor = [System.Drawing.Color]::FromArgb(40, 150, 80)
+$btnStart.FlatAppearance.BorderSize = 0
+$btnStart.BackColor = $C_GREEN
 $btnStart.ForeColor = [System.Drawing.Color]::White
-$btnStart.Location = New-Object System.Drawing.Point(15, 432)
-$btnStart.Size = New-Object System.Drawing.Size(590, 52)
+$btnStart.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnStart.Location = New-Object System.Drawing.Point(16, 512)
+$btnStart.Size = New-Object System.Drawing.Size(608, 54)
 
+# --- Progress ---
 $prgBar = New-Object System.Windows.Forms.ProgressBar
-$prgBar.Location = New-Object System.Drawing.Point(15, 494)
-$prgBar.Size = New-Object System.Drawing.Size(590, 16)
+$prgBar.Location = New-Object System.Drawing.Point(16, 574)
+$prgBar.Size = New-Object System.Drawing.Size(608, 14)
 
+# --- Result box ---
+$pnlResult = New-Object System.Windows.Forms.Panel
+$pnlResult.Location = New-Object System.Drawing.Point(16, 596)
+$pnlResult.Size = New-Object System.Drawing.Size(608, 46)
+$pnlResult.BackColor = $C_IDLE
+
+$lblResult = New-Object System.Windows.Forms.Label
+$lblResult.Text = "RESULT YAHAN DIKHEGA"
+$lblResult.Font = $F_BIG
+$lblResult.ForeColor = $C_IDLE_TX
+$lblResult.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+$lblResult.Location = New-Object System.Drawing.Point(0, 0)
+$lblResult.Size = New-Object System.Drawing.Size(608, 46)
+
+$pnlResult.Controls.Add($lblResult)
+
+# --- Log ---
 $txtLog = New-Object System.Windows.Forms.TextBox
 $txtLog.Multiline = $true
 $txtLog.ReadOnly = $true
 $txtLog.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
-$txtLog.BackColor = [System.Drawing.Color]::White
-$txtLog.Location = New-Object System.Drawing.Point(15, 516)
-$txtLog.Size = New-Object System.Drawing.Size(590, 70)
-
-$lblResult = New-Object System.Windows.Forms.Label
-$lblResult.Text = ""
-$lblResult.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
-$lblResult.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-$lblResult.Location = New-Object System.Drawing.Point(15, 592)
-$lblResult.Size = New-Object System.Drawing.Size(590, 30)
+$txtLog.BackColor = $C_LOG_BG
+$txtLog.ForeColor = $C_SECOND_TX
+$txtLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
+$txtLog.Location = New-Object System.Drawing.Point(16, 650)
+$txtLog.Size = New-Object System.Drawing.Size(608, 40)
 
 # ---------------------------------------------------------------------------
 # Events
@@ -371,10 +492,12 @@ $btnStart.Add_Click({
 
     Set-Inputs $false
     $script:btnStart.Enabled = $false
+    $script:btnStart.Text = "CHAL RAHA HAI..."
     $script:prgBar.Maximum = $pws.Count
     $script:prgBar.Value = 0
-    $script:lblResult.Text = "Check ho raha hai..."
-    $script:lblResult.ForeColor = [System.Drawing.Color]::Black
+    $script:pnlResult.BackColor = $C_IDLE
+    $script:lblResult.ForeColor = $C_IDLE_TX
+    $script:lblResult.Text = "CHECK HO RAHA HAI..."
 
     Add-Log ("Start: SSID = " + $ssid + ", passwords = " + $pws.Count)
 
@@ -391,24 +514,27 @@ $btnStart.Add_Click({
             Add-Log ("SAHI password: " + $pw + "  ->  abhi connected: " + $ssid)
             break
         } else {
-            Add-Log ("X galat: " + $pw)
+            Add-Log ("X  galat: " + $pw)
         }
     }
 
     if ($found) {
-        $script:lblResult.Text = "SAHI PASSWORD: " + $found
-        $script:lblResult.ForeColor = [System.Drawing.Color]::Green
+        $script:pnlResult.BackColor = $C_GREEN
+        $script:lblResult.ForeColor = [System.Drawing.Color]::White
+        $script:lblResult.Text = "SAHI PASSWORD:  " + $found
     } else {
-        $script:lblResult.Text = "Koi bhi password sahi nahi mila."
-        $script:lblResult.ForeColor = [System.Drawing.Color]::Red
+        $script:pnlResult.BackColor = $C_RED
+        $script:lblResult.ForeColor = [System.Drawing.Color]::White
+        $script:lblResult.Text = "KOI BHI PASSWORD SAHI NAHI MILA"
     }
 
     Set-Inputs $true
     $script:btnStart.Enabled = $true
+    $script:btnStart.Text = "START  -  SAHI PASSWORD DHUNDHO"
 })
 
 # ---------------------------------------------------------------------------
-# Startup: auto-scan + show current connection
+# Startup
 # ---------------------------------------------------------------------------
 
 Update-CurrentLabel
@@ -418,13 +544,14 @@ if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile - dropdown se chuno
 else { Add-Log "Scan: koi network nahi mila - SSID khud type karo" }
 Update-SecInfo
 
-$frmMain.Controls.AddRange(@(
-    $lblTitle, $lblSub,
-    $lblSsid, $cmbSsid, $btnScan, $lblCurrent,
-    $lblPass, $txtPass, $btnFile, $btnClear,
-    $lblWait, $numWait, $chkWpa3, $lblSec,
-    $btnStart, $prgBar, $txtLog, $lblResult
-))
+$frmMain.Controls.Add($pnlHeader)
+$frmMain.Controls.Add($pnlWifi)
+$frmMain.Controls.Add($pnlPass)
+$frmMain.Controls.Add($pnlOpt)
+$frmMain.Controls.Add($btnStart)
+$frmMain.Controls.Add($prgBar)
+$frmMain.Controls.Add($pnlResult)
+$frmMain.Controls.Add($txtLog)
 
 [void]$frmMain.ShowDialog()
 

@@ -19,6 +19,7 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 ### Window me ye sab milega:
 | Chiz | Kya kare |
 |------|----------|
+| **Modern UI** 🎨 | Naya design — blue header, white cards, colorful buttons |
 | **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
 | **"Abhi connected" (green)** | SSID box ke neeche **live** dikhta hai ki abhi kaunsa WiFi connected hai — isse sure ho jaoge ki sahi WiFi ka hi test ho raha hai |
 | **Security auto-detect** ⭐ | Network chunte hi app **khud pata laga leta hai** ki purana (WPA2) hai ya naya (WPA3) — WPA3 checkbox **apne aap** ON ho jayega, kuch sochna nahi |
