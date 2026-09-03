@@ -21,6 +21,7 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 |------|----------|
 | **Modern UI** 🎨 | Naya design — blue header, white cards, colorful buttons |
 | **🔑 Saved Password Dikhao** ⭐ | Agar aap **usi WiFi se connected ho** jiska password bhool gaye — ye button **bina disconnect kiye, bina test kiye** seedha password dikha dega (Windows me save hota hai) + copy bhi kar dega |
+| **📋 Saare Saved Passwords** ⭐ | Is computer par **jitne bhi WiFi kabhi save hue hain, un sabke passwords ek saath** dikha dega — bina disconnect kiye. Agar "B" WiFi ka password is laptop par kabhi save hua ho to yahin mil jayega |
 | **🔄 Auto-reconnect** ⭐ | Alag WiFi test karo to bhi test khatam hote hi app **purane WiFi se wapas khud connect** kar lega |
 | **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
 | **"Abhi connected" (green)** | SSID box ke neeche **live** dikhta hai ki abhi kaunsa WiFi connected hai — isse sure ho jaoge ki sahi WiFi ka hi test ho raha hai |
@@ -44,6 +45,38 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 > 🛠️ Ye "app" asal me ek .bat file hai jo apne andar chhupa hua code (PowerShell
 > GUI) nikaal kar chalati hai. Source code `wifi_tester_gui.ps1` me hai agar
 > koi dekhna chahe.
+
+---
+
+# 🤖 ANDROID PHONE KE LIYE
+
+## Sach baat (Google ki security)
+Windows wala tool (passwords **try karke** sahi dhundhna) Android me **normal app
+se possible NAHI** — Android 10 ke baad Google ne apps ko WiFi se programmatically
+connect karna band kar diya hai. Isliye koi "tester" APK nahi ban sakta.
+
+## ✅ Lekin Android me ye ho sakta hai — "wifi_qr_decoder.html"
+
+Android khud **saved WiFi ka password QR code me** dikhata hai. Ye chhota tool
+us QR se password nikaal kar dikhata hai — **bina root, bina install, bina disconnect**.
+
+### Kaise use karein (2 minute):
+
+**Step 0 — QR lao (phone me):**
+1. Settings → **Wi-Fi**
+2. Jis network ka password chahiye uske naam par **tap** karo
+3. **Share / QR code** dabao → QR dikhega
+
+**Step 1 — QR se password nikalo:**
+1. `wifi_qr_decoder.html` download karo
+2. Phone ke **Chrome** me kholo (file tap karo → "Open with Chrome")
+3. **"Camera Scan"** tab → QR scan karo
+   - ya **"Text Paste"** tab → QR ke neeche jo text dikhta hai wo paste karo
+4. Password **bade green me** dikh jayega + copy button
+
+> ⚠️ Ye sirf **unhi WiFi** ka password dikha sakta hai jo phone me **pehle se
+> saved** hain (jo aap kabhi connect kar chuke ho). Naya/unknown network ka
+> password Android par nikalna possible nahi (bina root ke).
 
 ---
 

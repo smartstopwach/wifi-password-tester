@@ -210,6 +210,72 @@ function Get-SavedPassword {
     return @{ Found = $false; Key = $null }
 }
 
+function Show-AllSavedPasswords {
+    # Is computer ke SAARE saved WiFi profiles + unke passwords ek saath.
+    # Bilkul bhi disconnect nahi hota - bas padh kar dikhata hai.
+    $out = & netsh wlan show profiles 2>$null
+    $names = @()
+    foreach ($l in $out) {
+        if ($l -match ':\s*(.+)$') {
+            $n = $Matches[1].Trim()
+            if ($n -and $n -notin $names) { $names += $n }
+        }
+    }
+    if ($names.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show("Is computer par koi WiFi profile saved nahi hai.", "WiFi Password Tester")
+        return
+    }
+    $lines = @()
+    $lines += "Is computer par ye sab WiFi SAVE hain (aur inke passwords):"
+    $lines += ""
+    foreach ($n in $names) {
+        $r = Get-SavedPassword $n
+        if ($r.Found) {
+            if ($r.Key) { $lines += ($n + "  ->  " + $r.Key) }
+            else { $lines += ($n + "  ->  (OPEN - password nahi lagta)") }
+        } else {
+            $lines += ($n + "  ->  (password nahi mila)")
+        }
+    }
+    $text = $lines -join "`r`n"
+    [System.Windows.Forms.Clipboard]::SetText($text)
+
+    $f = New-Object System.Windows.Forms.Form
+    $f.Text = "Saare Saved WiFi Passwords"
+    $f.StartPosition = "CenterScreen"
+    $f.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $f.ClientSize = New-Object System.Drawing.Size(560, 400)
+    $f.BackColor = $C_CARD
+    $f.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+    $tb = New-Object System.Windows.Forms.TextBox
+    $tb.Multiline = $true
+    $tb.ReadOnly = $true
+    $tb.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
+    $tb.Font = New-Object System.Drawing.Font("Consolas", 10)
+    $tb.Text = $text
+    $tb.Location = New-Object System.Drawing.Point(10, 10)
+    $tb.Size = New-Object System.Drawing.Size(540, 340)
+
+    $btnCopy = New-Object System.Windows.Forms.Button
+    $btnCopy.Text = "Copy karo"
+    $btnCopy.Location = New-Object System.Drawing.Point(10, 358)
+    $btnCopy.Size = New-Object System.Drawing.Size(150, 30)
+    $btnCopy.Add_Click({ [System.Windows.Forms.Clipboard]::SetText($tb.Text) })
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = "Band karo"
+    $btnClose.Location = New-Object System.Drawing.Point(430, 358)
+    $btnClose.Size = New-Object System.Drawing.Size(120, 30)
+    $btnClose.Add_Click({ $f.Close() })
+
+    $f.Controls.Add($tb)
+    $f.Controls.Add($btnCopy)
+    $f.Controls.Add($btnClose)
+    [void]$f.ShowDialog()
+    Add-Log ("Saare saved passwords dikhaye (" + $names.Count + " networks)")
+}
+
 function Add-Log([string]$msg) {
     $script:txtLog.AppendText($msg + "`r`n")
     $script:txtLog.SelectionStart = $script:txtLog.TextLength
@@ -303,15 +369,26 @@ $lblCurrent.Location = New-Object System.Drawing.Point(14, 92)
 $lblCurrent.Size = New-Object System.Drawing.Size(580, 24)
 
 $btnSaved = New-Object System.Windows.Forms.Button
-$btnSaved.Text = "KEY: Saved Password Dikhao (bina disconnect)"
+$btnSaved.Text = "Saved Password Dikhao"
 $btnSaved.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $btnSaved.FlatAppearance.BorderSize = 0
 $btnSaved.BackColor = [System.Drawing.Color]::FromArgb(250, 204, 21)
 $btnSaved.ForeColor = [System.Drawing.Color]::FromArgb(120, 53, 15)
-$btnSaved.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+$btnSaved.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
 $btnSaved.Cursor = [System.Windows.Forms.Cursors]::Hand
 $btnSaved.Location = New-Object System.Drawing.Point(14, 122)
-$btnSaved.Size = New-Object System.Drawing.Size(580, 30)
+$btnSaved.Size = New-Object System.Drawing.Size(285, 30)
+
+$btnAll = New-Object System.Windows.Forms.Button
+$btnAll.Text = "Saare Saved Passwords"
+$btnAll.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnAll.FlatAppearance.BorderSize = 0
+$btnAll.BackColor = [System.Drawing.Color]::FromArgb(253, 224, 71)
+$btnAll.ForeColor = [System.Drawing.Color]::FromArgb(120, 53, 15)
+$btnAll.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$btnAll.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnAll.Location = New-Object System.Drawing.Point(309, 122)
+$btnAll.Size = New-Object System.Drawing.Size(285, 30)
 
 $pnlWifi.Controls.Add($lblStep1)
 $pnlWifi.Controls.Add($lblSsid)
@@ -319,6 +396,7 @@ $pnlWifi.Controls.Add($cmbSsid)
 $pnlWifi.Controls.Add($btnScan)
 $pnlWifi.Controls.Add($lblCurrent)
 $pnlWifi.Controls.Add($btnSaved)
+$pnlWifi.Controls.Add($btnAll)
 
 # --- Card 2: Passwords ---
 $pnlPass = New-Object System.Windows.Forms.Panel
@@ -492,6 +570,10 @@ $btnSaved.Add_Click({
     } else {
         [System.Windows.Forms.MessageBox]::Show("Is WiFi ka password is computer me saved NAHI hai.`n`nIska matlab: ye computer pehle kabhi is WiFi se connect nahi hua.`nIsliye password pata karne ke liye TEST karna hi padega (jo connect karke check karta hai).", "WiFi Password Tester")
     }
+})
+
+$btnAll.Add_Click({
+    Show-AllSavedPasswords
 })
 
 $btnFile.Add_Click({

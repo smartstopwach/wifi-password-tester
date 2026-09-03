@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiFi QR - Password Nikalo</title>
+<style>
+  :root{
+    --bg:#eef2f9; --card:#ffffff; --header:#1d4ed8; --header-sub:#bfdbfe;
+    --accent:#1d4ed8; --gray:#64748b; --green:#16a34a; --red:#dc2626;
+    --amber:#f59e0b; --amber2:#b45309; --ink:#1e293b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+  .header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8); color:#fff;
+    padding:22px 16px 20px; text-align:center;}
+  .header h1{margin:0; font-size:22px; letter-spacing:.5px;}
+  .header p{margin:6px 0 0; color:var(--header-sub); font-size:13.5px;}
+  .wrap{max-width:560px; margin:0 auto; padding:14px 12px 40px;}
+
+  .card{background:var(--card); border-radius:14px; padding:14px;
+    margin-bottom:14px; box-shadow:0 1px 3px rgba(15,23,42,.08);}
+  .step{font-size:11px; font-weight:800; color:var(--accent);
+    letter-spacing:1px; margin:0 0 8px;}
+
+  .howto{font-size:13.5px; line-height:1.65; color:#334155;}
+  .howto ol{margin:8px 0 0; padding-left:20px;}
+  .howto li{margin-bottom:6px;}
+  .howto b{color:var(--green);}
+
+  .tabs{display:flex; gap:8px; margin-bottom:12px;}
+  .tab{flex:1; border:0; border-radius:10px; padding:11px 4px; font-size:14px;
+    font-weight:700; background:#e2e8f0; color:#475569; cursor:pointer;}
+  .tab.active{background:var(--accent); color:#fff;}
+
+  .pane{display:none;} .pane.show{display:block;}
+
+  textarea{width:100%; min-height:92px; border:1.5px solid #cbd5e1; border-radius:10px;
+    padding:10px; font-size:14px; font-family:Consolas,Menlo,monospace; resize:vertical;}
+
+  .btn{display:block; width:100%; border:0; border-radius:12px; padding:14px;
+    font-size:15.5px; font-weight:800; cursor:pointer; color:#fff; margin-top:10px;}
+  .btn.blue{background:var(--accent);}
+  .btn.green{background:var(--green);}
+  .btn.amber{background:var(--amber); color:var(--amber2);}
+  .btn.ghost{background:#e2e8f0; color:#334155;}
+
+  #video{width:100%; border-radius:12px; background:#0f172a; aspect-ratio:4/3;
+    object-fit:cover; display:none;}
+  #camhint{font-size:13px; color:var(--gray); text-align:center; margin-top:8px;}
+
+  .result{display:none; border-radius:12px; padding:16px; text-align:center;
+    margin-top:4px;}
+  .result.ok{background:var(--green); color:#fff;}
+  .result.err{background:var(--red); color:#fff;}
+  .result .big{font-size:24px; font-weight:900; word-break:break-all; margin:6px 0;}
+  .result .sub{font-size:13px; opacity:.92;}
+  .row{background:rgba(255,255,255,.15); border-radius:10px; padding:8px 12px;
+    margin-top:10px; font-size:14px; text-align:left;}
+  .row b{display:block; font-size:11px; opacity:.85; text-transform:uppercase;}
+
+  .note{font-size:12px; color:var(--gray); line-height:1.6; margin-top:10px;}
+  .warn{background:#fef3c7; color:#92400e; border-radius:12px; padding:12px;
+    font-size:12.5px; line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📶 WiFi QR — Password Nikalo</h1>
+  <p>Saved WiFi ka password QR se nikalo — bina root, bina install, bina disconnect</p>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <p class="step">STEP 0 &nbsp;|&nbsp; PEHLE QR KAHA SE LANA HAI</p>
+    <div class="howto">
+      <ol>
+        <li>Settings kholo → <b>Wi-Fi</b> par jao</li>
+        <li>Jis network ka password chahiye, <b>uske naam par tap</b> karo</li>
+        <li><b>Share / QR code</b> option dabao → ek QR dikhega</li>
+        <li>Wahi QR yahan <b>scan</b> karo, ya uske neeche likha <b>text copy</b> karke paste karo</li>
+      </ol>
+      <p style="margin:6px 0 0">💡 Ye sirf <b>unhi WiFi</b> ka password dikha sakta hai jo aapke phone me <b>pehle se save</b> hain (jo aap kabhi connect kar chuke ho).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="step">STEP 1 &nbsp;|&nbsp; TARIKA CHUNO</p>
+    <div class="tabs">
+      <button class="tab active" id="tabScan" onclick="showTab('scan')">📷 Camera Scan</button>
+      <button class="tab" id="tabPaste" onclick="showTab('paste')">📋 Text Paste</button>
+    </div>
+
+    <div class="pane show" id="paneScan">
+      <video id="video" muted playsinline></video>
+      <button class="btn green" id="btnCam" onclick="toggleCamera()">Camera chalu karo</button>
+      <p class="note" id="camhint">Camera sirf Chrome me kaam karta hai (ye page phone ke browser me kholna). Nahi chale to "Text Paste" use karo.</p>
+    </div>
+
+    <div class="pane" id="panePaste">
+      <textarea id="txt" placeholder="Yahan paste karo, jaise:
+WIFI:T:WPA;S:MyWiFi;P:MyPass123;;"></textarea>
+      <button class="btn blue" onclick="decodeFromText()">Password Nikalo</button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="sub" id="rTitle"></div>
+    <div class="big" id="rBig"></div>
+    <div class="row"><b>SSID (naam)</b><span id="rSsid"></span></div>
+    <div class="row"><b>Password</b><span id="rPass"></span></div>
+    <div class="row"><b>Type</b><span id="rType"></span></div>
+    <button class="btn amber" id="btnCopy" onclick="copyResult()">Password Copy karo</button>
+  </div>
+
+  <div class="warn">
+    ⚠️ <b>Sirf apne khud ke WiFi</b> ke liye use karo. Ye tool naya password "try" nahi karta — sirf <b>phone me pehle se saved</b> password QR se nikal kar dikhata hai. Kisi aur ke network par use karna galat hai.
+  </div>
+
+</div>
+
+<script>
+  var lastResult = null;
+  var stream = null;
+  var camOn = false;
+
+  function showTab(t){
+    document.getElementById('tabScan').classList.toggle('active', t==='scan');
+    document.getElementById('tabPaste').classList.toggle('active', t==='paste');
+    document.getElementById('paneScan').classList.toggle('show', t==='scan');
+    document.getElementById('panePaste').classList.toggle('show', t==='paste');
+  }
+
+  function splitSemi(body){
+    var parts=[], cur='';
+    for(var i=0;i<body.length;i++){
+      var c=body[i];
+      if(c==='\\' && i+1<body.length){ cur+=c+body[i+1]; i++; continue; }
+      if(c===';'){ if(cur) parts.push(cur); cur=''; }
+      else cur+=c;
+    }
+    if(cur) parts.push(cur);
+    return parts;
+  }
+
+  function unescapeWifi(s){
+    return s.replace(/\\([\\;,:"'])/g,'$1').replace(/\\(.)/g,'$1');
+  }
+
+  function parseWifiQr(s){
+    s=(s||'').trim();
+    if(!/^WIFI:/i.test(s)){
+      var m=s.match(/WIFI:[^\s"']+/i);
+      if(m) s=m[0]; else return {error:'Ye WiFi QR wala text nahi lagta. Sahi text paste karo (WIFI:... se shuru hona chahiye).'};
+    }
+    var body=s.substring(5);
+    var out={type:'',ssid:'',password:'',hidden:false};
+    var fields=splitSemi(body);
+    for(var j=0;j<fields.length;j++){
+      var f=fields[j], i=f.indexOf(':');
+      if(i<0) continue;
+      var k=f.slice(0,i).toUpperCase(), v=unescapeWifi(f.slice(i+1));
+      if(k==='T') out.type=v;
+      else if(k==='S') out.ssid=v;
+      else if(k==='P') out.password=v;
+      else if(k==='H') out.hidden=(v.toLowerCase()==='true');
+    }
+    if(!out.ssid && !out.password) return {error:'QR me SSID/password nahi mila.'};
+    return out;
+  }
+
+  function typeLabel(t){
+    if(/WPA/i.test(t)) return 'WPA/WPA2 (password wala)';
+    if(/WEP/i.test(t)) return 'WEP (bahut purana)';
+    if(/nopass/i.test(t)||t==='') return 'OPEN (koi password nahi)';
+    return t||'pata nahi';
+  }
+
+  function showResult(r){
+    var box=document.getElementById('result');
+    if(r.error){
+      box.className='result err';
+      document.getElementById('rTitle').textContent='SAMASYA';
+      document.getElementById('rBig').textContent=r.error;
+      document.getElementById('rSsid').textContent='-';
+      document.getElementById('rPass').textContent='-';
+      document.getElementById('rType').textContent='-';
+      document.getElementById('btnCopy').style.display='none';
+    } else {
+      box.className='result ok';
+      document.getElementById('rTitle').textContent='PASSWORD MIL GAYA';
+      document.getElementById('rBig').textContent=r.password || '(khali)';
+      document.getElementById('rSsid').textContent=r.ssid || '-';
+      document.getElementById('rPass').textContent=r.password || '-';
+      document.getElementById('rType').textContent=typeLabel(r.type);
+      document.getElementById('btnCopy').style.display='block';
+    }
+    box.style.display='block';
+    lastResult=r;
+    box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function decodeFromText(){
+    var r=parseWifiQr(document.getElementById('txt').value);
+    showResult(r);
+  }
+
+  function copyResult(){
+    if(!lastResult || !lastResult.password){ return; }
+    var done=function(){};
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(lastResult.password).then(function(){
+        document.getElementById('btnCopy').textContent='Copy ho gaya ✓';
+      }).catch(function(){ fallbackCopy(lastResult.password); });
+    } else fallbackCopy(lastResult.password);
+  }
+
+  function fallbackCopy(t){
+    var ta=document.createElement('textarea');
+    ta.value=t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); document.getElementById('btnCopy').textContent='Copy ho gaya ✓'; }
+    catch(e){ document.getElementById('btnCopy').textContent='Copy nahi hua'; }
+    document.body.removeChild(ta);
+  }
+
+  // ------- Camera (BarcodeDetector, Chrome Android) -------
+  async function toggleCamera(){
+    var btn=document.getElementById('btnCam');
+    if(camOn){ stopCamera(); return; }
+    if(!('BarcodeDetector' in window)){
+      alert('Aapke browser me camera QR scan nahi chalega.\n"Text Paste" wala tarika use karo.');
+      showTab('paste'); return;
+    }
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      var video=document.getElementById('video');
+      video.style.display='block';
+      video.srcObject=stream;
+      await video.play();
+      camOn=true;
+      btn.textContent='Camera band karo';
+      document.getElementById('camhint').textContent='QR ko camera ke saamne rakho...';
+      var detector=new BarcodeDetector({formats:['qr_code']});
+      (async function loop(){
+        if(!camOn) return;
+        try{
+          var codes=await detector.detect(video);
+          if(codes.length>0){
+            stopCamera();
+            var r=parseWifiQr(codes[0].rawValue);
+            showResult(r);
+            return;
+          }
+        }catch(e){}
+        requestAnimationFrame(loop);
+      })();
+    }catch(e){
+      alert('Camera nahi khul paya. "Text Paste" wala tarika use karo.\n('+e.message+')');
+      showTab('paste');
+    }
+  }
+
+  function stopCamera(){
+    camOn=false;
+    if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+    var video=document.getElementById('video');
+    video.style.display='none';
+    video.srcObject=null;
+    document.getElementById('btnCam').textContent='Camera chalu karo';
+    document.getElementById('camhint').textContent='Camera sirf Chrome me kaam karta hai. Nahi chale to "Text Paste" use karo.';
+  }
+</script>
+</body>
+</html>
