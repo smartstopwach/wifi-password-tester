@@ -60,6 +60,18 @@ connect karna band kar diya hai. Isliye koi "tester" APK nahi ban sakta.
 Android khud **saved WiFi ka password QR code me** dikhata hai. Ye chhota tool
 us QR se password nikaal kar dikhata hai — **bina root, bina install, bina disconnect**.
 
+### 📲 Phone par kholne ke 2 tarike:
+
+**Tarika A — seedha link se (BEST, app jaisa):**
+1. Phone ke Chrome me ye link kholo:
+   `https://smartstopwach.github.io/wifi-password-tester/wifi_qr_decoder.html`
+2. Chrome ka menu (⋮) → **"Add to Home screen"** → home par iska **icon** aa jayega
+3. Ab full-screen **app jaisa** khulega, offline bhi chalega
+
+**Tarika B — file download karke:**
+1. `wifi_qr_decoder.html` download karo
+2. Phone ke Chrome me kholo (file tap → "Open with Chrome")
+
 ### Kaise use karein (2 minute):
 
 **Step 0 — QR lao (phone me):**
@@ -67,11 +79,13 @@ us QR se password nikaal kar dikhata hai — **bina root, bina install, bina dis
 2. Jis network ka password chahiye uske naam par **tap** karo
 3. **Share / QR code** dabao → QR dikhega
 
-**Step 1 — QR se password nikalo:**
-1. `wifi_qr_decoder.html` download karo
-2. Phone ke **Chrome** me kholo (file tap karo → "Open with Chrome")
-3. **"Camera Scan"** tab → QR scan karo
-   - ya **"Text Paste"** tab → QR ke neeche jo text dikhta hai wo paste karo
+**Step 1 — QR se password nikalo (3 tarike, jo bhi chale):**
+| Tarika | Kaise | Kab |
+|--------|-------|-----|
+| 📷 **Camera** | QR ko camera se scan karo | Chrome Android me chalta hai |
+| 🖼️ **Gallery** ⭐ | QR ka **screenshot** lo → app me wo photo chuno | **Har phone par 100% chalta hai** |
+| 📋 **Paste** | QR ke neeche likha text (WIFI:... se shuru) copy karke paste karo | **Har phone par 100% chalta hai** |
+
 4. Password **bade green me** dikh jayega + copy button
 
 > ⚠️ Ye sirf **unhi WiFi** ka password dikha sakta hai jo phone me **pehle se

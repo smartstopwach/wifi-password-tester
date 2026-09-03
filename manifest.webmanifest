@@ -1,0 +1,16 @@
+{
+  "name": "WiFi Password Nikalo",
+  "short_name": "WiFi Pass",
+  "description": "Saved WiFi ka password QR se nikalo - bina root, bina install",
+  "start_url": "./wifi_qr_decoder.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2f9",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
