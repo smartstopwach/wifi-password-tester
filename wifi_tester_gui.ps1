@@ -1,7 +1,10 @@
 # ============================================================================
-#  WiFi Password Tester - GUI (Windows) - Compact Edition
-#  Chhoti screen (laptop) par bhi POORI window fit ho, isliye compact banaya hai.
-#  Bada STATUS display: kaunsa password chal raha hai + kitne passwords hain.
+#  WiFi Password Tester - GUI (Windows) - Fit Edition
+#  FIX: chhoti screen par window lambi ho jati thi aur scroll nahi hota tha.
+#  1) Window screen ke hisaab se khud chhoti hoti hai (auto-fit)
+#  2) Maximize button ON - full screen karne par sab dikhega
+#  3) Content scrollable panel me hai - mouse wheel se scroll hota hai
+#  4) Compact layout - kam jagah me sab kuch
 #
 #  NOTE: Is file ko seedha chalane ke liye "WifiTesterApp.bat" use karo.
 #        Sirf apne khud ke WiFi par use karein.
@@ -36,12 +39,12 @@ $C_IDLE      = [System.Drawing.Color]::FromArgb(203, 213, 225)
 $C_IDLE_TX   = [System.Drawing.Color]::FromArgb(51, 65, 85)
 $C_LOG_BG    = [System.Drawing.Color]::FromArgb(248, 250, 252)
 
-$F_TITLE  = New-Object System.Drawing.Font("Segoe UI", 13, [System.Drawing.FontStyle]::Bold)
+$F_TITLE  = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
 $F_STEP   = New-Object System.Drawing.Font("Segoe UI", 9,  [System.Drawing.FontStyle]::Bold)
-$F_BTN    = New-Object System.Drawing.Font("Segoe UI", 11.5, [System.Drawing.FontStyle]::Bold)
-$F_BIG    = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
-$F_CUR    = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-$F_STATUS = New-Object System.Drawing.Font("Segoe UI", 12.5, [System.Drawing.FontStyle]::Bold)
+$F_BTN    = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+$F_BIG    = New-Object System.Drawing.Font("Segoe UI", 10.5, [System.Drawing.FontStyle]::Bold)
+$F_CUR    = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+$F_STATUS = New-Object System.Drawing.Font("Segoe UI", 11.5, [System.Drawing.FontStyle]::Bold)
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -204,8 +207,9 @@ function Show-AllSavedPasswords {
     $f = New-Object System.Windows.Forms.Form
     $f.Text = "Saare Saved WiFi Passwords"
     $f.StartPosition = "CenterScreen"
-    $f.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $f.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
     $f.ClientSize = New-Object System.Drawing.Size(560, 400)
+    $f.MinimumSize = New-Object System.Drawing.Size(400, 300)
     $f.BackColor = $C_CARD
     $f.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
@@ -215,24 +219,30 @@ function Show-AllSavedPasswords {
     $tb.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
     $tb.Font = New-Object System.Drawing.Font("Consolas", 10)
     $tb.Text = $text
-    $tb.Location = New-Object System.Drawing.Point(10, 10)
-    $tb.Size = New-Object System.Drawing.Size(540, 340)
+    $tb.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $tb.Height = 340
+
+    $pnlBtns = New-Object System.Windows.Forms.Panel
+    $pnlBtns.Dock = [System.Windows.Forms.DockStyle]::Bottom
+    $pnlBtns.Height = 44
 
     $btnCopy = New-Object System.Windows.Forms.Button
     $btnCopy.Text = "Copy karo"
-    $btnCopy.Location = New-Object System.Drawing.Point(10, 358)
-    $btnCopy.Size = New-Object System.Drawing.Size(150, 30)
+    $btnCopy.Location = New-Object System.Drawing.Point(10, 8)
+    $btnCopy.Size = New-Object System.Drawing.Size(150, 28)
     $btnCopy.Add_Click({ [System.Windows.Forms.Clipboard]::SetText($tb.Text) })
 
     $btnClose = New-Object System.Windows.Forms.Button
     $btnClose.Text = "Band karo"
-    $btnClose.Location = New-Object System.Drawing.Point(430, 358)
-    $btnClose.Size = New-Object System.Drawing.Size(120, 30)
+    $btnClose.Location = New-Object System.Drawing.Point(430, 8)
+    $btnClose.Size = New-Object System.Drawing.Size(120, 28)
     $btnClose.Add_Click({ $f.Close() })
 
+    $pnlBtns.Controls.Add($btnCopy)
+    $pnlBtns.Controls.Add($btnClose)
+
     $f.Controls.Add($tb)
-    $f.Controls.Add($btnCopy)
-    $f.Controls.Add($btnClose)
+    $f.Controls.Add($pnlBtns)
     [void]$f.ShowDialog()
     Add-Log ("Saare saved passwords dikhaye (" + $names.Count + " networks)")
 }
@@ -305,59 +315,71 @@ function Set-Inputs([bool]$enabled) {
 }
 
 # ---------------------------------------------------------------------------
-# Build the form (COMPACT - chhoti screen par bhi fit)
+# Build the form
 # ---------------------------------------------------------------------------
 
 $frmMain = New-Object System.Windows.Forms.Form
 $frmMain.Text = "WiFi Password Tester"
 $frmMain.StartPosition = "CenterScreen"
-$frmMain.FormBorderStyle = "FixedSingle"
-$frmMain.MaximizeBox = $false
-$frmMain.AutoScroll = $true
-$frmMain.ClientSize = New-Object System.Drawing.Size(640, 616)
+$frmMain.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
+$frmMain.MaximizeBox = $true
+$frmMain.MinimizeBox = $true
+$frmMain.MinimumSize = New-Object System.Drawing.Size(600, 430)
+
+# --- Auto-fit: screen se badi window kabhi nahi ---
+$scr = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+$winH = [Math]::Min(560, $scr.Height - 70)
+if ($winH -lt 430) { $winH = 430 }
+$frmMain.ClientSize = New-Object System.Drawing.Size(620, $winH)
 $frmMain.BackColor = $C_BG
 $frmMain.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
-# --- Header banner ---
+# --- Header (fixed, dock top) ---
 $pnlHeader = New-Object System.Windows.Forms.Panel
-$pnlHeader.Location = New-Object System.Drawing.Point(0, 0)
-$pnlHeader.Size = New-Object System.Drawing.Size(640, 64)
+$pnlHeader.Dock = [System.Windows.Forms.DockStyle]::Top
+$pnlHeader.Height = 52
 $pnlHeader.BackColor = $C_HEADER
 
 $lblBrand = New-Object System.Windows.Forms.Label
 $lblBrand.Text = "WiFi Password Tester"
 $lblBrand.Font = $F_TITLE
 $lblBrand.ForeColor = $C_HEADER_TX
-$lblBrand.Location = New-Object System.Drawing.Point(24, 8)
-$lblBrand.Size = New-Object System.Drawing.Size(500, 26)
+$lblBrand.Location = New-Object System.Drawing.Point(20, 6)
+$lblBrand.Size = New-Object System.Drawing.Size(580, 22)
 
 $lblBrandSub = New-Object System.Windows.Forms.Label
 $lblBrandSub.Text = "Apne passwords me se sahi WiFi password dhundho"
-$lblBrandSub.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$lblBrandSub.Font = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $lblBrandSub.ForeColor = $C_HEADER_SUB
-$lblBrandSub.Location = New-Object System.Drawing.Point(24, 36)
-$lblBrandSub.Size = New-Object System.Drawing.Size(580, 22)
+$lblBrandSub.Location = New-Object System.Drawing.Point(20, 30)
+$lblBrandSub.Size = New-Object System.Drawing.Size(580, 18)
 
 $pnlHeader.Controls.Add($lblBrand)
 $pnlHeader.Controls.Add($lblBrandSub)
 
+# --- Scrollable content panel (mouse wheel se scroll hoga) ---
+$pnlScroll = New-Object System.Windows.Forms.Panel
+$pnlScroll.Dock = [System.Windows.Forms.DockStyle]::Fill
+$pnlScroll.AutoScroll = $true
+$pnlScroll.BackColor = $C_BG
+
 # --- Card 1: WiFi chuno ---
 $pnlWifi = New-Object System.Windows.Forms.Panel
-$pnlWifi.Location = New-Object System.Drawing.Point(16, 72)
-$pnlWifi.Size = New-Object System.Drawing.Size(608, 112)
+$pnlWifi.Location = New-Object System.Drawing.Point(12, 8)
+$pnlWifi.Size = New-Object System.Drawing.Size(584, 100)
 $pnlWifi.BackColor = $C_CARD
 
 $lblStep1 = New-Object System.Windows.Forms.Label
 $lblStep1.Text = "STEP 1  |  WIFI CHUNO"
 $lblStep1.Font = $F_STEP
 $lblStep1.ForeColor = $C_ACCENT
-$lblStep1.Location = New-Object System.Drawing.Point(12, 6)
-$lblStep1.Size = New-Object System.Drawing.Size(584, 18)
+$lblStep1.Location = New-Object System.Drawing.Point(10, 4)
+$lblStep1.Size = New-Object System.Drawing.Size(564, 16)
 
 $cmbSsid = New-Object System.Windows.Forms.ComboBox
 $cmbSsid.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDown
-$cmbSsid.Location = New-Object System.Drawing.Point(12, 28)
-$cmbSsid.Size = New-Object System.Drawing.Size(426, 26)
+$cmbSsid.Location = New-Object System.Drawing.Point(10, 22)
+$cmbSsid.Size = New-Object System.Drawing.Size(424, 24)
 
 $btnScan = New-Object System.Windows.Forms.Button
 $btnScan.Text = "Scan Networks"
@@ -365,14 +387,14 @@ $btnScan.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $btnScan.FlatAppearance.BorderSize = 0
 $btnScan.BackColor = $C_PRIMARY
 $btnScan.ForeColor = [System.Drawing.Color]::White
-$btnScan.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
-$btnScan.Location = New-Object System.Drawing.Point(448, 28)
-$btnScan.Size = New-Object System.Drawing.Size(148, 26)
+$btnScan.Font = New-Object System.Drawing.Font("Segoe UI", 8.5, [System.Drawing.FontStyle]::Bold)
+$btnScan.Location = New-Object System.Drawing.Point(442, 22)
+$btnScan.Size = New-Object System.Drawing.Size(132, 24)
 
 $lblCurrent = New-Object System.Windows.Forms.Label
 $lblCurrent.Font = $F_CUR
-$lblCurrent.Location = New-Object System.Drawing.Point(12, 58)
-$lblCurrent.Size = New-Object System.Drawing.Size(584, 22)
+$lblCurrent.Location = New-Object System.Drawing.Point(10, 50)
+$lblCurrent.Size = New-Object System.Drawing.Size(564, 18)
 
 $btnSaved = New-Object System.Windows.Forms.Button
 $btnSaved.Text = "Saved Password Dikhao"
@@ -382,8 +404,8 @@ $btnSaved.BackColor = [System.Drawing.Color]::FromArgb(250, 204, 21)
 $btnSaved.ForeColor = [System.Drawing.Color]::FromArgb(120, 53, 15)
 $btnSaved.Font = New-Object System.Drawing.Font("Segoe UI", 8.5, [System.Drawing.FontStyle]::Bold)
 $btnSaved.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnSaved.Location = New-Object System.Drawing.Point(12, 82)
-$btnSaved.Size = New-Object System.Drawing.Size(292, 26)
+$btnSaved.Location = New-Object System.Drawing.Point(10, 72)
+$btnSaved.Size = New-Object System.Drawing.Size(276, 22)
 
 $btnAll = New-Object System.Windows.Forms.Button
 $btnAll.Text = "Saare Saved Passwords"
@@ -393,8 +415,8 @@ $btnAll.BackColor = [System.Drawing.Color]::FromArgb(253, 224, 71)
 $btnAll.ForeColor = [System.Drawing.Color]::FromArgb(120, 53, 15)
 $btnAll.Font = New-Object System.Drawing.Font("Segoe UI", 8.5, [System.Drawing.FontStyle]::Bold)
 $btnAll.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnAll.Location = New-Object System.Drawing.Point(312, 82)
-$btnAll.Size = New-Object System.Drawing.Size(284, 26)
+$btnAll.Location = New-Object System.Drawing.Point(294, 72)
+$btnAll.Size = New-Object System.Drawing.Size(280, 22)
 
 $pnlWifi.Controls.Add($lblStep1)
 $pnlWifi.Controls.Add($cmbSsid)
@@ -405,24 +427,24 @@ $pnlWifi.Controls.Add($btnAll)
 
 # --- Card 2: Passwords ---
 $pnlPass = New-Object System.Windows.Forms.Panel
-$pnlPass.Location = New-Object System.Drawing.Point(16, 192)
-$pnlPass.Size = New-Object System.Drawing.Size(608, 132)
+$pnlPass.Location = New-Object System.Drawing.Point(12, 114)
+$pnlPass.Size = New-Object System.Drawing.Size(584, 118)
 $pnlPass.BackColor = $C_CARD
 
 $lblStep2 = New-Object System.Windows.Forms.Label
 $lblStep2.Text = "STEP 2  |  PASSWORDS LIKHO (har line me ek)"
 $lblStep2.Font = $F_STEP
 $lblStep2.ForeColor = $C_ACCENT
-$lblStep2.Location = New-Object System.Drawing.Point(12, 6)
-$lblStep2.Size = New-Object System.Drawing.Size(584, 18)
+$lblStep2.Location = New-Object System.Drawing.Point(10, 4)
+$lblStep2.Size = New-Object System.Drawing.Size(564, 16)
 
 $txtPass = New-Object System.Windows.Forms.TextBox
 $txtPass.Multiline = $true
 $txtPass.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
 $txtPass.AllowDrop = $true
 $txtPass.Font = New-Object System.Drawing.Font("Consolas", 10)
-$txtPass.Location = New-Object System.Drawing.Point(12, 26)
-$txtPass.Size = New-Object System.Drawing.Size(584, 76)
+$txtPass.Location = New-Object System.Drawing.Point(10, 22)
+$txtPass.Size = New-Object System.Drawing.Size(564, 64)
 
 $btnFile = New-Object System.Windows.Forms.Button
 $btnFile.Text = "txt file kholo"
@@ -430,8 +452,8 @@ $btnFile.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $btnFile.FlatAppearance.BorderSize = 0
 $btnFile.BackColor = $C_SECONDARY
 $btnFile.ForeColor = $C_SECOND_TX
-$btnFile.Location = New-Object System.Drawing.Point(12, 106)
-$btnFile.Size = New-Object System.Drawing.Size(120, 22)
+$btnFile.Location = New-Object System.Drawing.Point(10, 92)
+$btnFile.Size = New-Object System.Drawing.Size(110, 20)
 
 $btnClear = New-Object System.Windows.Forms.Button
 $btnClear.Text = "Saaf karo"
@@ -439,15 +461,15 @@ $btnClear.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $btnClear.FlatAppearance.BorderSize = 0
 $btnClear.BackColor = $C_SECONDARY
 $btnClear.ForeColor = $C_SECOND_TX
-$btnClear.Location = New-Object System.Drawing.Point(140, 106)
-$btnClear.Size = New-Object System.Drawing.Size(80, 22)
+$btnClear.Location = New-Object System.Drawing.Point(126, 92)
+$btnClear.Size = New-Object System.Drawing.Size(76, 20)
 
 $lblHint = New-Object System.Windows.Forms.Label
 $lblHint.Text = "ya txt file ko seedha upar drag-drop kar do"
 $lblHint.ForeColor = $C_GRAY
-$lblHint.Font = New-Object System.Drawing.Font("Segoe UI", 8.5)
-$lblHint.Location = New-Object System.Drawing.Point(228, 108)
-$lblHint.Size = New-Object System.Drawing.Size(368, 20)
+$lblHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$lblHint.Location = New-Object System.Drawing.Point(208, 94)
+$lblHint.Size = New-Object System.Drawing.Size(366, 16)
 
 $pnlPass.Controls.Add($lblStep2)
 $pnlPass.Controls.Add($txtPass)
@@ -457,33 +479,33 @@ $pnlPass.Controls.Add($lblHint)
 
 # --- Card 3: Settings ---
 $pnlOpt = New-Object System.Windows.Forms.Panel
-$pnlOpt.Location = New-Object System.Drawing.Point(16, 332)
-$pnlOpt.Size = New-Object System.Drawing.Size(608, 56)
+$pnlOpt.Location = New-Object System.Drawing.Point(12, 238)
+$pnlOpt.Size = New-Object System.Drawing.Size(584, 48)
 $pnlOpt.BackColor = $C_CARD
 
 $lblWait = New-Object System.Windows.Forms.Label
 $lblWait.Text = "Wait (sec):"
 $lblWait.ForeColor = $C_GRAY
-$lblWait.Location = New-Object System.Drawing.Point(12, 10)
-$lblWait.Size = New-Object System.Drawing.Size(70, 20)
+$lblWait.Location = New-Object System.Drawing.Point(10, 8)
+$lblWait.Size = New-Object System.Drawing.Size(66, 18)
 
 $numWait = New-Object System.Windows.Forms.NumericUpDown
 $numWait.Minimum = 1
 $numWait.Maximum = 30
 $numWait.Value = 7
-$numWait.Location = New-Object System.Drawing.Point(84, 8)
-$numWait.Size = New-Object System.Drawing.Size(60, 24)
+$numWait.Location = New-Object System.Drawing.Point(78, 6)
+$numWait.Size = New-Object System.Drawing.Size(58, 22)
 
 $chkWpa3 = New-Object System.Windows.Forms.CheckBox
 $chkWpa3.Text = "WPA3 (naya router)"
-$chkWpa3.Location = New-Object System.Drawing.Point(156, 10)
-$chkWpa3.Size = New-Object System.Drawing.Size(160, 22)
+$chkWpa3.Location = New-Object System.Drawing.Point(146, 8)
+$chkWpa3.Size = New-Object System.Drawing.Size(150, 20)
 
 $lblSec = New-Object System.Windows.Forms.Label
 $lblSec.Text = "Security: pata nahi. Default WPA2 chalega."
 $lblSec.ForeColor = $C_GRAY
-$lblSec.Location = New-Object System.Drawing.Point(12, 34)
-$lblSec.Size = New-Object System.Drawing.Size(584, 18)
+$lblSec.Location = New-Object System.Drawing.Point(10, 28)
+$lblSec.Size = New-Object System.Drawing.Size(564, 16)
 
 $pnlOpt.Controls.Add($lblWait)
 $pnlOpt.Controls.Add($numWait)
@@ -499,13 +521,13 @@ $btnStart.FlatAppearance.BorderSize = 0
 $btnStart.BackColor = $C_GREEN
 $btnStart.ForeColor = [System.Drawing.Color]::White
 $btnStart.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnStart.Location = New-Object System.Drawing.Point(16, 396)
-$btnStart.Size = New-Object System.Drawing.Size(608, 44)
+$btnStart.Location = New-Object System.Drawing.Point(12, 292)
+$btnStart.Size = New-Object System.Drawing.Size(584, 40)
 
 # --- Progress ---
 $prgBar = New-Object System.Windows.Forms.ProgressBar
-$prgBar.Location = New-Object System.Drawing.Point(16, 446)
-$prgBar.Size = New-Object System.Drawing.Size(608, 12)
+$prgBar.Location = New-Object System.Drawing.Point(12, 338)
+$prgBar.Size = New-Object System.Drawing.Size(584, 10)
 
 # --- STATUS (bada) ---
 $lblStatus = New-Object System.Windows.Forms.Label
@@ -513,8 +535,8 @@ $lblStatus.Text = "Tayyar hai. Password likho aur START dabao."
 $lblStatus.Font = $F_STATUS
 $lblStatus.ForeColor = $C_ACCENT
 $lblStatus.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-$lblStatus.Location = New-Object System.Drawing.Point(16, 462)
-$lblStatus.Size = New-Object System.Drawing.Size(608, 30)
+$lblStatus.Location = New-Object System.Drawing.Point(12, 352)
+$lblStatus.Size = New-Object System.Drawing.Size(584, 26)
 
 # --- Log ---
 $txtLog = New-Object System.Windows.Forms.TextBox
@@ -524,13 +546,13 @@ $txtLog.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
 $txtLog.BackColor = $C_LOG_BG
 $txtLog.ForeColor = $C_SECOND_TX
 $txtLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
-$txtLog.Location = New-Object System.Drawing.Point(16, 494)
-$txtLog.Size = New-Object System.Drawing.Size(608, 56)
+$txtLog.Location = New-Object System.Drawing.Point(12, 382)
+$txtLog.Size = New-Object System.Drawing.Size(584, 42)
 
 # --- Result box ---
 $pnlResult = New-Object System.Windows.Forms.Panel
-$pnlResult.Location = New-Object System.Drawing.Point(16, 556)
-$pnlResult.Size = New-Object System.Drawing.Size(608, 44)
+$pnlResult.Location = New-Object System.Drawing.Point(12, 430)
+$pnlResult.Size = New-Object System.Drawing.Size(584, 44)
 $pnlResult.BackColor = $C_IDLE
 
 $lblResult = New-Object System.Windows.Forms.Label
@@ -539,9 +561,23 @@ $lblResult.Font = $F_BIG
 $lblResult.ForeColor = $C_IDLE_TX
 $lblResult.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $lblResult.Location = New-Object System.Drawing.Point(0, 0)
-$lblResult.Size = New-Object System.Drawing.Size(608, 44)
+$lblResult.Size = New-Object System.Drawing.Size(584, 44)
 
 $pnlResult.Controls.Add($lblResult)
+
+# --- sab content scroll panel me ---
+$pnlScroll.Controls.Add($pnlWifi)
+$pnlScroll.Controls.Add($pnlPass)
+$pnlScroll.Controls.Add($pnlOpt)
+$pnlScroll.Controls.Add($btnStart)
+$pnlScroll.Controls.Add($prgBar)
+$pnlScroll.Controls.Add($lblStatus)
+$pnlScroll.Controls.Add($txtLog)
+$pnlScroll.Controls.Add($pnlResult)
+
+# --- form par header + scroll ---
+$frmMain.Controls.Add($pnlScroll)
+$frmMain.Controls.Add($pnlHeader)
 
 # ---------------------------------------------------------------------------
 # Events
@@ -697,16 +733,6 @@ $cnt = Scan-Networks
 if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile - dropdown se chuno") }
 else { Add-Log "Scan: koi network nahi mila - SSID khud type karo" }
 Update-SecInfo
-
-$frmMain.Controls.Add($pnlHeader)
-$frmMain.Controls.Add($pnlWifi)
-$frmMain.Controls.Add($pnlPass)
-$frmMain.Controls.Add($pnlOpt)
-$frmMain.Controls.Add($btnStart)
-$frmMain.Controls.Add($prgBar)
-$frmMain.Controls.Add($lblStatus)
-$frmMain.Controls.Add($txtLog)
-$frmMain.Controls.Add($pnlResult)
 
 [void]$frmMain.ShowDialog()
 
