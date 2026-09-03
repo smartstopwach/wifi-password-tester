@@ -18,6 +18,7 @@ Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = "SilentlyContinue"
 
 $script:authMap = @{}
+$script:stopRequested = $false
 
 # ---------------------------------------------------------------------------
 # Colors (theme)
@@ -106,6 +107,15 @@ function Update-PwCount {
     }
 }
 
+function Wait-Seconds([int]$n) {
+    # Interruptible wait - beech me STOP dabane par turant rukta hai
+    for ($j = 0; $j -lt ($n * 5); $j++) {
+        if ($script:stopRequested) { return }
+        [System.Windows.Forms.Application]::DoEvents()
+        Start-Sleep -Milliseconds 200
+    }
+}
+
 function Test-Password {
     param([string]$ssid, [string]$pw, [string]$auth, [int]$wait)
 
@@ -155,7 +165,7 @@ function Test-Password {
         return $false
     }
 
-    Start-Sleep -Seconds $wait
+    $null = Wait-Seconds $wait
     $now = Get-CurrentSsid
     if ($now -eq $ssid) { return $true }
 
@@ -311,6 +321,7 @@ function Set-Inputs([bool]$enabled) {
     $script:btnFile.Enabled   = $enabled
     $script:btnClear.Enabled  = $enabled
     $script:numWait.Enabled   = $enabled
+    $script:numStart.Enabled  = $enabled
     $script:chkWpa3.Enabled   = $enabled
 }
 
@@ -487,18 +498,31 @@ $lblWait = New-Object System.Windows.Forms.Label
 $lblWait.Text = "Wait (sec):"
 $lblWait.ForeColor = $C_GRAY
 $lblWait.Location = New-Object System.Drawing.Point(10, 8)
-$lblWait.Size = New-Object System.Drawing.Size(66, 18)
+$lblWait.Size = New-Object System.Drawing.Size(62, 18)
 
 $numWait = New-Object System.Windows.Forms.NumericUpDown
 $numWait.Minimum = 1
 $numWait.Maximum = 30
 $numWait.Value = 7
-$numWait.Location = New-Object System.Drawing.Point(78, 6)
-$numWait.Size = New-Object System.Drawing.Size(58, 22)
+$numWait.Location = New-Object System.Drawing.Point(72, 6)
+$numWait.Size = New-Object System.Drawing.Size(54, 22)
+
+$lblStart = New-Object System.Windows.Forms.Label
+$lblStart.Text = "Start from:"
+$lblStart.ForeColor = $C_GRAY
+$lblStart.Location = New-Object System.Drawing.Point(132, 8)
+$lblStart.Size = New-Object System.Drawing.Size(66, 18)
+
+$numStart = New-Object System.Windows.Forms.NumericUpDown
+$numStart.Minimum = 1
+$numStart.Maximum = 100000
+$numStart.Value = 1
+$numStart.Location = New-Object System.Drawing.Point(198, 6)
+$numStart.Size = New-Object System.Drawing.Size(54, 22)
 
 $chkWpa3 = New-Object System.Windows.Forms.CheckBox
 $chkWpa3.Text = "WPA3 (naya router)"
-$chkWpa3.Location = New-Object System.Drawing.Point(146, 8)
+$chkWpa3.Location = New-Object System.Drawing.Point(262, 8)
 $chkWpa3.Size = New-Object System.Drawing.Size(150, 20)
 
 $lblSec = New-Object System.Windows.Forms.Label
@@ -509,10 +533,12 @@ $lblSec.Size = New-Object System.Drawing.Size(564, 16)
 
 $pnlOpt.Controls.Add($lblWait)
 $pnlOpt.Controls.Add($numWait)
+$pnlOpt.Controls.Add($lblStart)
+$pnlOpt.Controls.Add($numStart)
 $pnlOpt.Controls.Add($chkWpa3)
 $pnlOpt.Controls.Add($lblSec)
 
-# --- START button ---
+# --- START + STOP buttons ---
 $btnStart = New-Object System.Windows.Forms.Button
 $btnStart.Text = "START  -  SAHI PASSWORD DHUNDHO"
 $btnStart.Font = $F_BTN
@@ -522,7 +548,19 @@ $btnStart.BackColor = $C_GREEN
 $btnStart.ForeColor = [System.Drawing.Color]::White
 $btnStart.Cursor = [System.Windows.Forms.Cursors]::Hand
 $btnStart.Location = New-Object System.Drawing.Point(12, 292)
-$btnStart.Size = New-Object System.Drawing.Size(584, 40)
+$btnStart.Size = New-Object System.Drawing.Size(470, 40)
+
+$btnStop = New-Object System.Windows.Forms.Button
+$btnStop.Text = "STOP"
+$btnStop.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+$btnStop.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnStop.FlatAppearance.BorderSize = 0
+$btnStop.BackColor = $C_RED
+$btnStop.ForeColor = [System.Drawing.Color]::White
+$btnStop.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnStop.Enabled = $false
+$btnStop.Location = New-Object System.Drawing.Point(490, 292)
+$btnStop.Size = New-Object System.Drawing.Size(106, 40)
 
 # --- Progress ---
 $prgBar = New-Object System.Windows.Forms.ProgressBar
@@ -570,6 +608,7 @@ $pnlScroll.Controls.Add($pnlWifi)
 $pnlScroll.Controls.Add($pnlPass)
 $pnlScroll.Controls.Add($pnlOpt)
 $pnlScroll.Controls.Add($btnStart)
+$pnlScroll.Controls.Add($btnStop)
 $pnlScroll.Controls.Add($prgBar)
 $pnlScroll.Controls.Add($lblStatus)
 $pnlScroll.Controls.Add($txtLog)
@@ -651,49 +690,68 @@ $btnStart.Add_Click({
         return
     }
 
-    $pws = Parse-Passwords $script:txtPass.Text
-    if ($pws.Count -eq 0) {
+    $allPws = Parse-Passwords $script:txtPass.Text
+    if ($allPws.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Koi password nahi likha. Pehle passwords likho ya txt file kholo.", "WiFi Password Tester")
         return
     }
+
+    # --- Start from: kitne chhod kar shuru karna hai ---
+    $startFrom = [int]$script:numStart.Value
+    if ($startFrom -lt 1) { $startFrom = 1 }
+    if ($startFrom -gt $allPws.Count) { $startFrom = $allPws.Count }
+    $skip = $startFrom - 1
+    $pws = $allPws[$skip..($allPws.Count - 1)]
+    $total = $allPws.Count
 
     $auth = "WPA2PSK"
     if ($script:chkWpa3.Checked) { $auth = "WPA3SAE" }
     $wait = [int]$script:numWait.Value
 
     $origSsid = Get-CurrentSsid
+    $script:stopRequested = $false
 
     Set-Inputs $false
     $script:btnStart.Enabled = $false
     $script:btnStart.Text = "CHAL RAHA HAI..."
-    $script:prgBar.Maximum = $pws.Count
-    $script:prgBar.Value = 0
+    $script:btnStop.Enabled = $true
+    $script:prgBar.Maximum = $total
+    $script:prgBar.Value = $skip
     $script:pnlResult.BackColor = $C_IDLE
     $script:lblResult.ForeColor = $C_IDLE_TX
     $script:lblResult.Text = "CHECK HO RAHA HAI..."
     $script:lblStatus.ForeColor = $C_AMBER
-    $script:lblStatus.Text = "Shuru... (" + $pws.Count + " passwords hain)"
+    $script:lblStatus.Text = "Shuru... (" + $pws.Count + "/" + $total + " - pehle " + $skip + " chhode)"
 
-    Add-Log ("Start: SSID = " + $ssid + ", passwords = " + $pws.Count)
+    Add-Log ("Start: SSID = " + $ssid + ", total = " + $total + ", start from #" + $startFrom)
 
     $found = $null
     $i = 0
     foreach ($pw in $pws) {
+        if ($script:stopRequested) {
+            Add-Log "Ruk gaya (STOP dabaya)."
+            break
+        }
         $i++
-        $script:prgBar.Value = $i
-        $script:lblStatus.Text = "[" + $i + "/" + $pws.Count + "] Try ho raha hai: " + $pw
-        Add-Log ("[" + $i + "/" + $pws.Count + "] Try: " + $pw)
+        $idx = $skip + $i
+        $script:prgBar.Value = $idx
+        $script:lblStatus.Text = "[" + $idx + "/" + $total + "] Try ho raha hai: " + $pw
+        Add-Log ("[" + $idx + "/" + $total + "] Try: " + $pw)
         $ok = Test-Password $ssid $pw $auth $wait
         Update-CurrentLabel
+        if ($script:stopRequested) {
+            Add-Log "Ruk gaya (STOP dabaya)."
+            break
+        }
         if ($ok) {
             $found = $pw
             $script:lblStatus.ForeColor = $C_GREEN
-            $script:lblStatus.Text = "SAHI MIL GAYA: " + $pw + "  (" + $i + "/" + $pws.Count + ")"
+            $script:lblStatus.Text = "SAHI MIL GAYA: " + $pw + "  (" + $idx + "/" + $total + ")"
             Add-Log ("SAHI password: " + $pw + "  ->  abhi connected: " + $ssid)
             break
         } else {
             $script:lblStatus.ForeColor = $C_RED
-            $script:lblStatus.Text = "[" + $i + "/" + $pws.Count + "] Galat: " + $pw
+            $script:lblStatus.Text = "[" + $idx + "/" + $total + "] Galat: " + $pw
             Add-Log ("X  galat: " + $pw)
         }
     }
@@ -702,24 +760,40 @@ $btnStart.Add_Click({
         $script:pnlResult.BackColor = $C_GREEN
         $script:lblResult.ForeColor = [System.Drawing.Color]::White
         $script:lblResult.Text = "SAHI PASSWORD:  " + $found
+    } elseif ($script:stopRequested) {
+        $script:pnlResult.BackColor = $C_AMBER
+        $script:lblResult.ForeColor = [System.Drawing.Color]::White
+        $script:lblResult.Text = "RUK GAYA (STOP)"
+        $script:lblStatus.ForeColor = $C_AMBER
+        $script:lblStatus.Text = "Ruk gaya. 'Start from' me number daal kar dobara chalao."
     } else {
         $script:pnlResult.BackColor = $C_RED
         $script:lblResult.ForeColor = [System.Drawing.Color]::White
         $script:lblResult.Text = "KOI BHI PASSWORD SAHI NAHI MILA"
         $script:lblStatus.ForeColor = $C_RED
         $script:lblStatus.Text = "Koi bhi password sahi nahi tha. List check karo."
-        if ($origSsid -and $origSsid -ne $ssid) {
-            Add-Log ("Wapas connect ho rahe hain: " + $origSsid)
-            & netsh wlan connect name="$origSsid" | Out-Null
-            Start-Sleep -Seconds 3
-            Update-CurrentLabel
-            Add-Log ("Wapas connect ho gaye: " + $origSsid)
-        }
+    }
+
+    # --- Sahi nahi mila (ya STOP) to purane WiFi se wapas connect ---
+    if (-not $found -and $origSsid -and $origSsid -ne $ssid) {
+        Add-Log ("Wapas connect ho rahe hain: " + $origSsid)
+        & netsh wlan connect name="$origSsid" | Out-Null
+        Start-Sleep -Seconds 3
+        Update-CurrentLabel
+        Add-Log ("Wapas connect ho gaye: " + $origSsid)
     }
 
     Set-Inputs $true
     $script:btnStart.Enabled = $true
     $script:btnStart.Text = "START  -  SAHI PASSWORD DHUNDHO"
+    $script:btnStop.Enabled = $false
+})
+
+$btnStop.Add_Click({
+    $script:stopRequested = $true
+    $script:btnStop.Enabled = $false
+    $script:lblStatus.Text = "Ruk raha hai..."
+    $script:lblStatus.ForeColor = $C_AMBER
 })
 
 # ---------------------------------------------------------------------------
