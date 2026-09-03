@@ -21,6 +21,7 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 |------|----------|
 | **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
 | **"Abhi connected" (green)** | SSID box ke neeche **live** dikhta hai ki abhi kaunsa WiFi connected hai — isse sure ho jaoge ki sahi WiFi ka hi test ho raha hai |
+| **Security auto-detect** ⭐ | Network chunte hi app **khud pata laga leta hai** ki purana (WPA2) hai ya naya (WPA3) — WPA3 checkbox **apne aap** ON ho jayega, kuch sochna nahi |
 | **Passwords box** | Har line me ek password likho, **ya txt file ko seedha us box me drag-drop** karo, ya "txt file kholo" button se chuno |
 | **START button** | Dabao → ye khud test karega |
 | **Progress + log** | Kaunsa password try ho raha hai, live dikhta hai |
@@ -208,6 +209,29 @@ Passwords   : 4
   is password se connection save kar lein.
 - **Linux**: `nmcli` use hota hai. Agar permission error aaye to `sudo` ke saath try karo.
 - **macOS**: `networksetup` use hota hai, kabhi-kabhi admin (sudo) password maang sakta hai.
+
+---
+
+## 🔐 NAYA WIFI vs PURANA WIFI — kya scene hai?
+
+WiFi ka password "lock" system 2 tarah ka hota hai. Router ke hisaab se:
+
+| Type | Kaun | Scene |
+|------|------|-------|
+| **WPA2** (purana) | 2018 tak ke + zyada tar saste router | Sabse common. 8 character se chhota password bhi chalta hai. |
+| **WPA3** (naya) | Naye router (Jio AirFiber, Airtel Xstream, TP-Link new, etc.) | Zyada secure. Naya WiFi connection jo 2020+ me set hua ho. |
+| **WPA** (bahut purana) | 2003-2008 wale router | Ab mushkil se milta hai. |
+
+**Aapko kuch sochna nahi padta** — app me **Scan Networks** dabate hi, jab aap apna
+WiFi chunte ho, app khud batayega:
+- 🟢 `Security: WPA3-Personal -> NAYA type` → checkbox **apne aap ON**
+- ⚪ `Security: WPA2-Personal -> purana type` → checkbox **apne aap OFF**
+
+Matlab app khud sahi setting laga deta hai. ✅
+
+> **Tip (agar Scan me nahi dikh raha):** Purana router = WPA2 (checkbox khaali chhodo).
+> Naya router (2020+ ya Jio/Airtel fiber) = WPA3 (checkbox tick karo).
+> Galat laga diya to sirf result "koi sahi nahi" aayega — dobara dusra try kar lena, koi nuksaan nahi.
 
 ---
 

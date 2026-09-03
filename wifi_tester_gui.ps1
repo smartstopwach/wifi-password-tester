@@ -14,6 +14,8 @@ Add-Type -AssemblyName System.Drawing
 
 $ErrorActionPreference = "SilentlyContinue"
 
+$script:authMap = @{}
+
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
@@ -122,18 +124,51 @@ function Test-Password {
 
 function Scan-Networks {
     $script:cmbSsid.Items.Clear()
+    $script:authMap = @{}
     $seen = @{}
+    $current = ""
     $lines = & netsh wlan show networks mode=bssid 2>$null
     foreach ($l in $lines) {
         if ($l -match 'SSID\s+\d+\s*:\s*(.+)$') {
-            $s = $Matches[1].Trim()
-            if ($s -and -not $seen.ContainsKey($s)) {
-                $seen[$s] = $true
-                [void]$script:cmbSsid.Items.Add($s)
+            $current = $Matches[1].Trim()
+            if ($current -and -not $seen.ContainsKey($current)) {
+                $seen[$current] = $true
+                [void]$script:cmbSsid.Items.Add($current)
+            }
+        } elseif ($l -match '^\s*Authentication\s*:\s*(.+)$' -and $current) {
+            if (-not $script:authMap.ContainsKey($current)) {
+                $script:authMap[$current] = $Matches[1].Trim()
             }
         }
     }
     return $script:cmbSsid.Items.Count
+}
+
+function Update-SecInfo {
+    # SSID ke hisaab se security type dikhao + WPA3 checkbox auto-set karo
+    $name = $script:cmbSsid.Text.Trim()
+    if ($name -and $script:authMap.ContainsKey($name)) {
+        $auth = $script:authMap[$name]
+        if ($auth -match 'WPA3') {
+            $script:lblSec.Text = "Security: " + $auth + "  ->  NAYA type (WPA3), checkbox ON ho gaya"
+            $script:lblSec.ForeColor = [System.Drawing.Color]::Green
+            $script:chkWpa3.Checked = $true
+        } elseif ($auth -match 'WPA2') {
+            $script:lblSec.Text = "Security: " + $auth + "  ->  purana type, aise hi chalega"
+            $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+            $script:chkWpa3.Checked = $false
+        } elseif ($auth -match 'WPA') {
+            $script:lblSec.Text = "Security: " + $auth + "  ->  bahut purana type"
+            $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+            $script:chkWpa3.Checked = $false
+        } else {
+            $script:lblSec.Text = "Security: " + $auth + "  ->  OPEN (password nahi lagta)"
+            $script:lblSec.ForeColor = [System.Drawing.Color]::Red
+        }
+    } else {
+        $script:lblSec.Text = "Security: pata nahi (default WPA2 chalega - purana router ho to aise hi chhodo)"
+        $script:lblSec.ForeColor = [System.Drawing.Color]::Gray
+    }
 }
 
 function Add-Log([string]$msg) {
@@ -162,7 +197,7 @@ $frmMain.Text = "WiFi Password Tester"
 $frmMain.StartPosition = "CenterScreen"
 $frmMain.FormBorderStyle = "FixedSingle"
 $frmMain.MaximizeBox = $false
-$frmMain.ClientSize = New-Object System.Drawing.Size(620, 622)
+$frmMain.ClientSize = New-Object System.Drawing.Size(620, 640)
 $frmMain.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 
 # --- Title ---
@@ -241,6 +276,12 @@ $chkWpa3.Text = "WPA3 (naya router)"
 $chkWpa3.Location = New-Object System.Drawing.Point(170, 380)
 $chkWpa3.Size = New-Object System.Drawing.Size(180, 24)
 
+$lblSec = New-Object System.Windows.Forms.Label
+$lblSec.Text = "Security: pata nahi (default WPA2 chalega)"
+$lblSec.ForeColor = [System.Drawing.Color]::Gray
+$lblSec.Location = New-Object System.Drawing.Point(15, 406)
+$lblSec.Size = New-Object System.Drawing.Size(590, 20)
+
 # --- START ---
 $btnStart = New-Object System.Windows.Forms.Button
 $btnStart.Text = "START - Sahi Password Dhundho"
@@ -248,11 +289,11 @@ $btnStart.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.
 $btnStart.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $btnStart.BackColor = [System.Drawing.Color]::FromArgb(40, 150, 80)
 $btnStart.ForeColor = [System.Drawing.Color]::White
-$btnStart.Location = New-Object System.Drawing.Point(15, 414)
+$btnStart.Location = New-Object System.Drawing.Point(15, 432)
 $btnStart.Size = New-Object System.Drawing.Size(590, 52)
 
 $prgBar = New-Object System.Windows.Forms.ProgressBar
-$prgBar.Location = New-Object System.Drawing.Point(15, 476)
+$prgBar.Location = New-Object System.Drawing.Point(15, 494)
 $prgBar.Size = New-Object System.Drawing.Size(590, 16)
 
 $txtLog = New-Object System.Windows.Forms.TextBox
@@ -260,14 +301,14 @@ $txtLog.Multiline = $true
 $txtLog.ReadOnly = $true
 $txtLog.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
 $txtLog.BackColor = [System.Drawing.Color]::White
-$txtLog.Location = New-Object System.Drawing.Point(15, 498)
+$txtLog.Location = New-Object System.Drawing.Point(15, 516)
 $txtLog.Size = New-Object System.Drawing.Size(590, 70)
 
 $lblResult = New-Object System.Windows.Forms.Label
 $lblResult.Text = ""
 $lblResult.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
 $lblResult.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-$lblResult.Location = New-Object System.Drawing.Point(15, 574)
+$lblResult.Location = New-Object System.Drawing.Point(15, 592)
 $lblResult.Size = New-Object System.Drawing.Size(590, 30)
 
 # ---------------------------------------------------------------------------
@@ -279,7 +320,11 @@ $btnScan.Add_Click({
     if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile") }
     else { Add-Log "Scan: koi network nahi mila - SSID khud likho" }
     Update-CurrentLabel
+    Update-SecInfo
 })
+
+$cmbSsid.Add_SelectedIndexChanged({ Update-SecInfo })
+$cmbSsid.Add_TextChanged({ Update-SecInfo })
 
 $btnFile.Add_Click({
     $dlg = New-Object System.Windows.Forms.OpenFileDialog
@@ -371,12 +416,13 @@ Update-CurrentLabel
 $cnt = Scan-Networks
 if ($cnt -gt 0) { Add-Log ("Scan: " + $cnt + " networks mile - dropdown se chuno") }
 else { Add-Log "Scan: koi network nahi mila - SSID khud type karo" }
+Update-SecInfo
 
 $frmMain.Controls.AddRange(@(
     $lblTitle, $lblSub,
     $lblSsid, $cmbSsid, $btnScan, $lblCurrent,
     $lblPass, $txtPass, $btnFile, $btnClear,
-    $lblWait, $numWait, $chkWpa3,
+    $lblWait, $numWait, $chkWpa3, $lblSec,
     $btnStart, $prgBar, $txtLog, $lblResult
 ))
 
