@@ -14,3 +14,4 @@ Thumbs.db
 *.xml
 *.tmp
 uploads/
+.sudo_as_admin_successful
