@@ -195,6 +195,21 @@ function Update-SecInfo {
     }
 }
 
+function Get-SavedPassword {
+    # Agar is computer ne pehle ye WiFi use kiya hai, to password Windows me
+    # save hota hai. Ye bina disconnect kiye, bina test kiye seedha dikha deta hai.
+    param([string]$ssid)
+    $out = & netsh wlan show profile name="$ssid" key=clear 2>$null
+    $key = $null
+    $found = $false
+    foreach ($l in $out) {
+        if ($l -match '^\s*Key Content\s*:\s*(.+)$') { $key = $Matches[1].Trim(); $found = $true }
+        if ($l -match 'Security key\s*:') { $found = $true }
+    }
+    if ($found) { return @{ Found = $true;  Key = $key } }
+    return @{ Found = $false; Key = $null }
+}
+
 function Add-Log([string]$msg) {
     $script:txtLog.AppendText($msg + "`r`n")
     $script:txtLog.SelectionStart = $script:txtLog.TextLength
@@ -221,7 +236,7 @@ $frmMain.Text = "WiFi Password Tester"
 $frmMain.StartPosition = "CenterScreen"
 $frmMain.FormBorderStyle = "FixedSingle"
 $frmMain.MaximizeBox = $false
-$frmMain.ClientSize = New-Object System.Drawing.Size(640, 700)
+$frmMain.ClientSize = New-Object System.Drawing.Size(640, 732)
 $frmMain.BackColor = $C_BG
 $frmMain.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
@@ -251,7 +266,7 @@ $pnlHeader.Controls.Add($lblBrandSub)
 # --- Card 1: WiFi chuno ---
 $pnlWifi = New-Object System.Windows.Forms.Panel
 $pnlWifi.Location = New-Object System.Drawing.Point(16, 100)
-$pnlWifi.Size = New-Object System.Drawing.Size(608, 128)
+$pnlWifi.Size = New-Object System.Drawing.Size(608, 160)
 $pnlWifi.BackColor = $C_CARD
 
 $lblStep1 = New-Object System.Windows.Forms.Label
@@ -285,17 +300,29 @@ $btnScan.Size = New-Object System.Drawing.Size(142, 28)
 $lblCurrent = New-Object System.Windows.Forms.Label
 $lblCurrent.Font = $F_CUR
 $lblCurrent.Location = New-Object System.Drawing.Point(14, 92)
-$lblCurrent.Size = New-Object System.Drawing.Size(580, 26)
+$lblCurrent.Size = New-Object System.Drawing.Size(580, 24)
+
+$btnSaved = New-Object System.Windows.Forms.Button
+$btnSaved.Text = "KEY: Saved Password Dikhao (bina disconnect)"
+$btnSaved.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnSaved.FlatAppearance.BorderSize = 0
+$btnSaved.BackColor = [System.Drawing.Color]::FromArgb(250, 204, 21)
+$btnSaved.ForeColor = [System.Drawing.Color]::FromArgb(120, 53, 15)
+$btnSaved.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+$btnSaved.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnSaved.Location = New-Object System.Drawing.Point(14, 122)
+$btnSaved.Size = New-Object System.Drawing.Size(580, 30)
 
 $pnlWifi.Controls.Add($lblStep1)
 $pnlWifi.Controls.Add($lblSsid)
 $pnlWifi.Controls.Add($cmbSsid)
 $pnlWifi.Controls.Add($btnScan)
 $pnlWifi.Controls.Add($lblCurrent)
+$pnlWifi.Controls.Add($btnSaved)
 
 # --- Card 2: Passwords ---
 $pnlPass = New-Object System.Windows.Forms.Panel
-$pnlPass.Location = New-Object System.Drawing.Point(16, 236)
+$pnlPass.Location = New-Object System.Drawing.Point(16, 268)
 $pnlPass.Size = New-Object System.Drawing.Size(608, 176)
 $pnlPass.BackColor = $C_CARD
 
@@ -347,7 +374,7 @@ $pnlPass.Controls.Add($lblHint)
 
 # --- Card 3: Settings ---
 $pnlOpt = New-Object System.Windows.Forms.Panel
-$pnlOpt.Location = New-Object System.Drawing.Point(16, 420)
+$pnlOpt.Location = New-Object System.Drawing.Point(16, 452)
 $pnlOpt.Size = New-Object System.Drawing.Size(608, 84)
 $pnlOpt.BackColor = $C_CARD
 
@@ -397,17 +424,17 @@ $btnStart.FlatAppearance.BorderSize = 0
 $btnStart.BackColor = $C_GREEN
 $btnStart.ForeColor = [System.Drawing.Color]::White
 $btnStart.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnStart.Location = New-Object System.Drawing.Point(16, 512)
+$btnStart.Location = New-Object System.Drawing.Point(16, 544)
 $btnStart.Size = New-Object System.Drawing.Size(608, 54)
 
 # --- Progress ---
 $prgBar = New-Object System.Windows.Forms.ProgressBar
-$prgBar.Location = New-Object System.Drawing.Point(16, 574)
+$prgBar.Location = New-Object System.Drawing.Point(16, 606)
 $prgBar.Size = New-Object System.Drawing.Size(608, 14)
 
 # --- Result box ---
 $pnlResult = New-Object System.Windows.Forms.Panel
-$pnlResult.Location = New-Object System.Drawing.Point(16, 596)
+$pnlResult.Location = New-Object System.Drawing.Point(16, 628)
 $pnlResult.Size = New-Object System.Drawing.Size(608, 46)
 $pnlResult.BackColor = $C_IDLE
 
@@ -429,7 +456,7 @@ $txtLog.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
 $txtLog.BackColor = $C_LOG_BG
 $txtLog.ForeColor = $C_SECOND_TX
 $txtLog.Font = New-Object System.Drawing.Font("Consolas", 8.5)
-$txtLog.Location = New-Object System.Drawing.Point(16, 650)
+$txtLog.Location = New-Object System.Drawing.Point(16, 682)
 $txtLog.Size = New-Object System.Drawing.Size(608, 40)
 
 # ---------------------------------------------------------------------------
@@ -446,6 +473,26 @@ $btnScan.Add_Click({
 
 $cmbSsid.Add_SelectedIndexChanged({ Update-SecInfo })
 $cmbSsid.Add_TextChanged({ Update-SecInfo })
+
+$btnSaved.Add_Click({
+    $name = $script:cmbSsid.Text.Trim()
+    if (-not $name) {
+        [System.Windows.Forms.MessageBox]::Show("Pehle WiFi ka naam (SSID) likho ya Scan se chuno.", "WiFi Password Tester")
+        return
+    }
+    $res = Get-SavedPassword $name
+    if ($res.Found) {
+        if ($res.Key) {
+            [System.Windows.Forms.Clipboard]::SetText($res.Key)
+            [System.Windows.Forms.MessageBox]::Show("Saved password mila (bina disconnect kiye):`n`n" + $res.Key + "`n`n(Copy bhi ho gaya - kahin bhi paste kar sakte ho)", "WiFi Password Tester")
+            Add-Log ("Saved password: " + $res.Key)
+        } else {
+            [System.Windows.Forms.MessageBox]::Show("Ye network is computer me saved hai, lekin iska password store nahi hai (OPEN network ho sakta hai).", "WiFi Password Tester")
+        }
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Is WiFi ka password is computer me saved NAHI hai.`n`nIska matlab: ye computer pehle kabhi is WiFi se connect nahi hua.`nIsliye password pata karne ke liye TEST karna hi padega (jo connect karke check karta hai).", "WiFi Password Tester")
+    }
+})
 
 $btnFile.Add_Click({
     $dlg = New-Object System.Windows.Forms.OpenFileDialog
@@ -490,6 +537,8 @@ $btnStart.Add_Click({
     if ($script:chkWpa3.Checked) { $auth = "WPA3SAE" }
     $wait = [int]$script:numWait.Value
 
+    $origSsid = Get-CurrentSsid
+
     Set-Inputs $false
     $script:btnStart.Enabled = $false
     $script:btnStart.Text = "CHAL RAHA HAI..."
@@ -526,6 +575,14 @@ $btnStart.Add_Click({
         $script:pnlResult.BackColor = $C_RED
         $script:lblResult.ForeColor = [System.Drawing.Color]::White
         $script:lblResult.Text = "KOI BHI PASSWORD SAHI NAHI MILA"
+        # purane WiFi se wapas connect karo (agar koi tha)
+        if ($origSsid -and $origSsid -ne $ssid) {
+            Add-Log ("Wapas connect ho rahe hain: " + $origSsid)
+            & netsh wlan connect name="$origSsid" | Out-Null
+            Start-Sleep -Seconds 3
+            Update-CurrentLabel
+            Add-Log ("Wapas connect ho gaye: " + $origSsid)
+        }
     }
 
     Set-Inputs $true

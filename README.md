@@ -20,6 +20,8 @@ try karke bata deta hai — koi guessing nahi, khud test karta hai.
 | Chiz | Kya kare |
 |------|----------|
 | **Modern UI** 🎨 | Naya design — blue header, white cards, colorful buttons |
+| **🔑 Saved Password Dikhao** ⭐ | Agar aap **usi WiFi se connected ho** jiska password bhool gaye — ye button **bina disconnect kiye, bina test kiye** seedha password dikha dega (Windows me save hota hai) + copy bhi kar dega |
+| **🔄 Auto-reconnect** ⭐ | Alag WiFi test karo to bhi test khatam hote hi app **purane WiFi se wapas khud connect** kar lega |
 | **Scan Networks** button | Aas-paas ke saare WiFi ki list le aayega → dropdown me se apna WiFi chuno (typing ki galati nahi hogi) |
 | **"Abhi connected" (green)** | SSID box ke neeche **live** dikhta hai ki abhi kaunsa WiFi connected hai — isse sure ho jaoge ki sahi WiFi ka hi test ho raha hai |
 | **Security auto-detect** ⭐ | Network chunte hi app **khud pata laga leta hai** ki purana (WPA2) hai ya naya (WPA3) — WPA3 checkbox **apne aap** ON ho jayega, kuch sochna nahi |
@@ -210,6 +212,30 @@ Passwords   : 4
   is password se connection save kar lein.
 - **Linux**: `nmcli` use hota hai. Agar permission error aaye to `sudo` ke saath try karo.
 - **macOS**: `networksetup` use hota hai, kabhi-kabhi admin (sudo) password maang sakta hai.
+
+---
+
+## 🔑 BINA DISCONNECT — password kaise pata kare?
+
+**Sabse pehle ye samjho:** ek WiFi card se ek hi WiFi connect hota hai (Windows ki hadd).
+Isliye **kisi NAYE network ka password test karne ke liye connect karna zaroori hai**
+= current WiFi disconnect hoga. Ye change nahi ho sakta.
+
+**LEKIN 2 kaam aise hain jo bina problem ke ho sakte hain:**
+
+1. **Agar tum USI WiFi se connected ho jiska password bhool gaye** → password tumhare
+   Windows me pehle se **save** hai! App me **"KEY: Saved Password Dikhao"** (peela button)
+   dabao → **bina disconnect kiye, bina test kiye** password turant dikh jayega + copy
+   bhi ho jayega. ✅
+   - Note: ye tabhi kaam karega jab is computer ne **pehle kabhi** us WiFi se connect kiya ho.
+
+2. **Agar kisi ALAG WiFi ka password test kar rahe ho** → disconnect to hoga, lekin
+   test khatam hote hi app **purane WiFi se wapas khud connect** kar lega (auto-reconnect).
+   ✅
+
+> Extra tip: agar tumhe bina disconnect kiye hi kisi dusre network ka password test
+> karna ho (rare case), to ek **USB WiFi dongle** (~200-300 Rs) laga lo — app ko alag
+> se nahi, bas dongle se test karo. Ek card = ek connection, do card = do connection.
 
 ---
 
